@@ -217,7 +217,7 @@ again:
 	 * Structure assignments
 	 */
 	case STRASG:
-		strasg(tree);
+		strasg((struct fasgn *)tree);
 		return(0);
 
 	/*

@@ -1,0 +1,10 @@
+struct	cnode *cblock();
+struct	fnode *fblock();
+struct	hshtab *xprtype();
+struct	tnode *block();
+struct	tnode *chkfun();
+struct	tnode *convert();
+struct	tnode *disarray();
+struct	tnode *nblock();
+struct	tnode *pexpr();
+struct	tnode *tree();
