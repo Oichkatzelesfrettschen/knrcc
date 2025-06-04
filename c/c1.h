@@ -1,8 +1,12 @@
+#ifndef C1_H
+#define C1_H
+
 /*
  * C code generator header
  */
 
 #include <stdio.h>
+#include "array_sizes.h"
 
 #define	LTYPE	long	/* change to int for no long consts */
 #define	NCPS	8
@@ -65,7 +69,7 @@ struct	ftconst {
 };
 
 /*
- * Node used for field assignemnts
+ * Node used for field assignments
  */
 struct	fasgn {
 	int	op;
@@ -99,8 +103,11 @@ struct	swtab {
 	int	swval;
 };
 
-char	maprel[];
-char	notrel[];
+void strasg(struct fasgn *atp);
+void *getblk(int size);
+
+extern char	maprel[MAPREL_SIZE];
+extern char	notrel[NOTREL_SIZE];
 int	nreg;
 int	isn;
 int	namsiz;
@@ -111,10 +118,10 @@ struct	table	efftab[];
 struct	table	regtab[];
 struct	table	sptab[];
 struct	table	lsptab[1];
-struct	instab	instab[];
-struct	instab	branchtab[];
-int	opdope[];
-char	*opntab[];
+extern struct	instab	instab[INSTAB_SIZE];
+extern struct	instab	branchtab[BRANCHTAB_SIZE];
+extern	int	opdope_pass1[OPDOPE_PASS1_SIZE];
+extern char	*opntab[OPNTAB_SIZE];
 int	nstack;
 int	nfloat;
 struct	tname	sfuncr;
@@ -325,3 +332,5 @@ int	xlab1, xlab2, xop, xzero;
 #define	RASSOC	0200
 #define	LEAF	0400
 #define	CNVRT	01000
+
+#endif /* C1_H */

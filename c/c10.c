@@ -7,17 +7,18 @@
 */
 
 #include "c1.h"
+#include "array_sizes.h"
 
 #define	dbprint(op)	/* */
 #ifdef	DEBUG
 #define	dbprint(op)	printf("	/ %s", opntab[op])
 #endif
 
-char	maprel[] {	EQUAL, NEQUAL, GREATEQ, GREAT, LESSEQ,
+char	maprel[MAPREL_SIZE] {	EQUAL, NEQUAL, GREATEQ, GREAT, LESSEQ,
 			LESS, GREATQP, GREATP, LESSEQP, LESSP
 };
 
-char	notrel[] {	NEQUAL, EQUAL, GREAT, GREATEQ, LESS,
+char	notrel[NOTREL_SIZE] {	NEQUAL, EQUAL, GREAT, GREATEQ, LESS,
 			LESSEQ, GREATP, GREATQP, LESSP, LESSEQP
 };
 
@@ -31,8 +32,7 @@ struct	table	*cregtab;
 int	nreg	3;
 int	isn	10000;
 
-main(argc, argv)
-char *argv[];
+int main(int argc, char *argv[])
 {
 
 	if (argc<4) {
@@ -83,9 +83,7 @@ char *argv[];
  * Return a ptr to the table entry or 0 if none found.
  */
 char *
-match(atree, table, nrleft, nocvt)
-struct tnode *atree;
-struct table *table;
+match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
 {
 #define	NOCVL	1
 #define	NOCVR	2
@@ -173,9 +171,7 @@ struct table *table;
  * A number of special cases are recognized, and
  * there is an interaction with the optimizer routines.
  */
-rcexpr(atree, atable, reg)
-struct tnode *atree;
-struct table *atable;
+int rcexpr(struct tnode *atree, struct table *atable, int reg)
 {
 	register r;
 	int modf, nargs, recurf;
@@ -217,7 +213,7 @@ again:
 	 * Structure assignments
 	 */
 	case STRASG:
-		strasg(tree);
+		strasg((struct fasgn *)tree);
 		return(0);
 
 	/*
@@ -396,9 +392,7 @@ again:
  * Most of the work is the macro-expansion of the
  * code table.
  */
-cexpr(atree, table, areg)
-struct tnode *atree;
-struct table *table;
+int cexpr(struct tnode *atree, struct table *table, int areg)
 {
 	int c, r;
 	register struct tnode *p, *p1, *tree;
@@ -495,14 +489,18 @@ struct table *table;
 	string = opt->tabstring;
 	p1 = tree->tr1;
 	if (p1->op==FCON && p1->value>0) {
-		printf(".data\nL%d:%o;%o;%o;%o\n.text\n", p1->value, p1->fvalue);
+		union { double d; unsigned short s[4]; } val_union;
+		val_union.d = p1->fvalue; // p1->fvalue is a double (from struct ftconst)
+		printf(".data\nL%d:%06o;%06o;%06o;%06o\n.text\n", p1->value, val_union.s[0], val_union.s[1], val_union.s[2], val_union.s[3]);
 		p1->value = -p1->value;
 	}
 	p2 = 0;
 	if (opdope[tree->op]&BINARY) {
 		p2 = tree->tr2;
 		if (p2->op==FCON && p2->value>0) {
-			printf(".data\nL%d:%o;%o;%o;%o\n.text\n", p2->value, p2->fvalue);
+			union { double d; unsigned short s[4]; } val_union;
+			val_union.d = p2->fvalue; // p2->fvalue is a double
+			printf(".data\nL%d:%06o;%06o;%06o;%06o\n.text\n", p2->value, val_union.s[0], val_union.s[1], val_union.s[2], val_union.s[3]);
 			p2->value = -p2->value;
 		}
 	}
@@ -802,9 +800,7 @@ loop:
  * on the subtrees and then on the tree itself.
  * It returns non-zero if anything changed.
  */
-reorder(treep, table, reg)
-struct tnode **treep;
-struct table *table;
+int reorder(struct tnode **treep, struct table *table, int reg)
 {
 	register r, o;
 	register struct tnode *p;
@@ -836,9 +832,7 @@ struct table *table;
  * Moreover, expressions like "reg = x+y" are best done as
  * "reg = x; reg =+ y" (so long as "reg" and "y" are not the same!).
  */
-sreorder(treep, table, reg, recurf)
-struct tnode **treep;
-struct table *table;
+int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 {
 	register struct tnode *p, *p1;
 
@@ -924,8 +918,7 @@ struct table *table;
  * Otherwise it uses sdelay to search for inc/dec
  * among the operands.
  */
-delay(treep, table, reg)
-struct tnode **treep;
+int delay(struct tnode **treep, struct table *table, int reg)
 {
 	register struct tnode *p, *p1;
 	register r;
@@ -951,8 +944,7 @@ struct tnode **treep;
 	return(0);
 }
 
-sdelay(ap)
-struct tnode **ap;
+struct tnode *sdelay(struct tnode **ap)
 {
 	register struct tnode *p, *p1;
 
@@ -976,15 +968,14 @@ struct tnode **ap;
  * be changed to some offset class, accidentally
  * modifying the reg--.
  */
-ncopy(ap)
-struct tname *ap;
+struct tname *ncopy(struct tname *ap)
 {
 	register struct tname *p, *q;
 
 	p = ap;
 	if (p->class!=REG)
 		return(p);
-	q = getblk(sizeof(*p));
+	q = (struct tname *)getblk(sizeof(*p));
 	q->op = p->op;
 	q->type = p->type;
 	q->class = p->class;
@@ -997,8 +988,7 @@ struct tname *ap;
  * If the tree can be immediately loaded into a register,
  * produce code to do so and return success.
  */
-chkleaf(atree, table, reg)
-struct tnode *atree;
+int chkleaf(struct tnode *atree, struct table *table, int reg)
 {
 	struct tnode lbuf;
 	register struct tnode *tree;
@@ -1020,8 +1010,7 @@ struct tnode *atree;
  * Return the number of bytes pushed,
  * for future popping.
  */
-comarg(atree, flagp)
-int *flagp;
+int comarg(struct tnode *atree, int *flagp)
 {
 	register struct tnode *tree;
 	register retval;
@@ -1076,8 +1065,7 @@ normal:
 }
 
 struct tnode *
-strfunc(atp)
-struct tnode *atp;
+strfunc(struct tnode *atp)
 {
 	register struct tnode *tp;
 
@@ -1091,8 +1079,7 @@ struct tnode *atp;
 /*
  * Compile an initializing expression
  */
-doinit(atype, atree)
-struct tnode *atree;
+void doinit(int atype, struct tnode *atree)
 {
 	register struct tnode *tree;
 	register int type;
@@ -1153,9 +1140,14 @@ struct tnode *atree;
 			goto illinit;
 		if (type==FLOAT) {
 			sfval = fval;
-			printf("%o; %o\n", sfval);
-		} else
-			printf("%o; %o; %o; %o\n", fval);
+			union { float f; unsigned short s[2]; } sfval_union;
+			sfval_union.f = sfval;
+			printf("%06o; %06o\n", sfval_union.s[0], sfval_union.s[1]);
+		} else { // type == DOUBLE
+			union { double d; unsigned short s[4]; } fval_union;
+			fval_union.d = fval;
+			printf("%06o; %06o; %06o; %06o\n", fval_union.s[0], fval_union.s[1], fval_union.s[2], fval_union.s[3]);
+		}
 		return;
 
 	case LONG:
@@ -1174,15 +1166,15 @@ struct tnode *atree;
 			lval = tree->lvalue;
 		else
 			goto illinit;
-		printf("%o; %o\n", lval);
+		// Print LSW then MSW for the long value
+		printf("%06o; %06o\n", (unsigned short)(lval & 0xFFFF), (unsigned short)(((unsigned long)lval >> 16) & 0xFFFF));
 		return;
 	}
 illinit:
 	error("Illegal initialization");
 }
 
-movreg(r0, r1, tree)
-struct tnode *tree;
+void movreg(int r0, int r1, struct tnode *tree)
 {
 	register char *s;
 

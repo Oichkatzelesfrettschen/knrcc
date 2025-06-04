@@ -1,9 +1,13 @@
+#ifndef C0_H
+#define C0_H
+
 #
 /*
 * 	C compiler-- first pass header
 */
 
 #include <stdio.h>
+#include "array_sizes.h"
 
 /*
  * parameters
@@ -149,8 +153,8 @@ struct swtab {
 
 char	cvtab[4][4];
 char	filename[64];
-int	opdope[];
-char	ctab[];
+extern int	opdope_pass0[OPDOPE_PASS0_SIZE];
+extern char	ctab[CTAB_SIZE];
 char	symbuf[NCPS+2];
 int	hshused;
 struct	hshtab	hshtab[HSHSIZ];
@@ -191,7 +195,7 @@ FILE	*sbufp;
 int	regvar;
 int	bitoffs;
 struct	tnode	funcblk;
-char	cvntab[];
+extern char	cvntab[CVNTAB_SIZE];
 char	numbuf[64];
 struct	hshtab **memlist;
 int	nmems;
@@ -455,4 +459,6 @@ char	*gblock();
 struct	tnode *pexpr();
 struct	str *strdec();
 struct	hshtab *xprtype();
-struct	tnode *nblock();
+// struct	tnode *nblock(); // Duplicate removed for brevity, original file content is leading
+
+#endif /* C0_H */

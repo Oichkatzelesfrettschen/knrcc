@@ -1,8 +1,12 @@
+#ifndef C2_H
+#define C2_H
+
 /*
  * Header for object code improver
  */
 
 #include <stdio.h>
+#include "array_sizes.h" /* Added for consistency, may or may not be used directly by c2.h */
 
 #define	JBR	1
 #define	CBR	2
@@ -130,3 +134,5 @@ struct	node *insertl();
 struct	node *codemove();
 char	*sbrk();
 char	*alloc();
+
+#endif /* C2_H */

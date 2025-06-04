@@ -404,7 +404,7 @@ struct swtab *afp, *alp;
 	}
 	/* hash switch */
 	best = 077777;
-	poctab = getblk(((ncase+2)/2) * sizeof(*poctab));
+	poctab = (int *)getblk(((ncase+2)/2) * sizeof(*poctab));
 	for (i=ncase/4; i<=ncase/2; i++) {
 		for (j=0; j<i; j++)
 			poctab[j] = 0;
@@ -888,7 +888,7 @@ getree()
 		t = geti();
 		line = geti();
 		curbase = funcbase;
-		while(swp=getblk(sizeof(*swp)), swp->swlab = geti())
+		while(swp = (struct swtab *)getblk(sizeof(*swp)), swp->swlab = geti())
 			swp->swval = geti();
 		pswitch(funcbase, swp, t);
 		break;
@@ -934,11 +934,11 @@ getree()
 	case NAME:
 		t = geti();
 		if (t==EXTERN) {
-			np = getblk(sizeof(*xnp));
+			np = (struct tname *)getblk(sizeof(*xnp));
 			np->type = geti();
 			outname(np->name);
 		} else {
-			np = getblk(sizeof(*np));
+			np = (struct tname *)getblk(sizeof(*np));
 			np->type = geti();
 			np->nloc = geti();
 		}
@@ -962,7 +962,7 @@ getree()
 			*sp++ = tnode(ITOL, LONG, tconst(op, INT));
 			break;
 		}
-		lp = getblk(sizeof(*lp));
+		lp = (struct lconst *)getblk(sizeof(*lp));
 		lp->op = LCON;
 		lp->type = LONG;
 		lp->lvalue = ((long)t<<16) + (unsigned)op;	/* nonportable */
@@ -972,7 +972,7 @@ getree()
 	case FCON:
 		t = geti();
 		outname(numbuf);
-		fp = getblk(sizeof(*fp));
+		fp = (struct ftconst *)getblk(sizeof(*fp));
 		fp->op = FCON;
 		fp->type = t;
 		fp->value = isn++;
@@ -987,7 +987,7 @@ getree()
 		break;
 
 	case STRASG:
-		sap = getblk(sizeof(*sap));
+		sap = (struct fasgn *)getblk(sizeof(*sap));
 		sap->op = STRASG;
 		sap->type = geti();
 		sap->mask = geti();
@@ -1063,8 +1063,7 @@ outname(s)
 	return(s);
 }
 
-strasg(atp)
-struct fasgn *atp;
+void strasg(struct fasgn *atp)
 {
 	register struct tnode *tp;
 	register nwords, i;

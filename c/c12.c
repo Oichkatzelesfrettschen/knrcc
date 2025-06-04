@@ -287,7 +287,7 @@ struct tnode *atree;
 
 	case ITOL:
 		if (subtre->op==CON && subtre->type==INT && subtre->value<0) {
-			subtre = getblk(sizeof(struct lconst));
+			subtre = (struct lconst *)getblk(sizeof(struct lconst));
 			subtre->op = LCON;
 			subtre->type = LONG;
 			subtre->lvalue = tree->tr1->value;
@@ -305,7 +305,7 @@ struct tnode *atree;
 
 	case LTOF:
 		if (subtre->op==LCON) {
-			tree = getblk(sizeof(*fp));
+			tree = (struct ftconst *)getblk(sizeof(*fp));
 			tree->op = FCON;
 			tree->type = DOUBLE;
 			tree->value = isn++;
@@ -326,7 +326,7 @@ struct tnode *atree;
 		p = &fv;
 		p++;
 		if (*p++==0 && *p++==0 && *p++==0) {
-			tree = getblk(sizeof(*fp));
+			tree = (struct ftconst *)getblk(sizeof(*fp));
 			tree->op = SFCON;
 			tree->type = DOUBLE;
 			tree->value = * (int *) &fv;
@@ -482,7 +482,7 @@ struct tnode *atree;
 		}
 		if (subtre->op==ITOL) {
 			if (subtre->tr1->op==CON) {
-				tree = getblk(sizeof(struct lconst));
+				tree = (struct lconst *)getblk(sizeof(struct lconst));
 				tree->op = LCON;
 				tree->type = LONG;
 				if (subtre->tr1->type==UNSIGN)
@@ -514,7 +514,7 @@ struct tnode *atree;
 			return(subtre);
 		}
 		if (subtre->op==ITOL && subtre->tr1->op==CON) {
-			tree = getblk(sizeof(struct lconst));
+			tree = (struct lconst *)getblk(sizeof(struct lconst));
 			tree->op = LCON;
 			tree->type = LONG;
 			if (subtre->tr1->type==UNSIGN)
@@ -561,7 +561,7 @@ struct tnode *at;
 	switch (t->op) {
 
 	case ASSIGN:
-		t2 = getblk(sizeof(*t2));
+		t2 = (struct fasgn *)getblk(sizeof(*t2));
 		t2->op = FSELA;
 		t2->type = UNSIGN;
 		t1 = t->tr1->tr2;
@@ -930,7 +930,7 @@ register struct tnode *lp, *rp;
 		lp->lvalue = l;
 		return(lp);
 	}
-	lp = getblk(sizeof(struct lconst));
+	lp = (struct lconst *)getblk(sizeof(struct lconst));
 	lp->op = LCON;
 	lp->type = LONG;
 	lp->lvalue = l;
@@ -992,7 +992,7 @@ struct tnode *tr1, *tr2;
 {
 	register struct tnode *p;
 
-	p = getblk(sizeof(*p));
+	p = (struct tnode *)getblk(sizeof(*p));
 	p->op = op;
 	p->type = type;
 	p->degree = 0;
@@ -1008,28 +1008,28 @@ tconst(val, type)
 {
 	register struct tconst *p;
 
-	p = getblk(sizeof(*p));
+	p = (struct tconst *)getblk(sizeof(*p));
 	p->op = CON;
 	p->type = type;
 	p->value = val;
 	return(p);
 }
 
-getblk(size)
+void *getblk(int size)
 {
-	register *p;
+	char *p; // Changed from 'register *p'
 
 	if (size&01)
 		abort();
-	p = curbase;
-	if ((curbase =+ size) >= coremax) {
-		if (sbrk(1024) == -1) {
+	p = curbase; // curbase is likely char* or compatible
+	if ((curbase += size) >= coremax) { // Corrected =+ to +=
+		if (sbrk(1024) == (char *)-1) { // sbrk returns (char *)-1 on error
 			error("Out of space-- c1");
 			exit(1);
 		}
-		coremax =+ 1024;
+		coremax += 1024; // Corrected =+ to +=
 	}
-	return(p);
+	return(p); // p is char*, compatible with void* return
 }
 
 islong(t)

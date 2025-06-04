@@ -1,5 +1,6 @@
 #
 #include "c0.h"
+#include "array_sizes.h"
 /*
  *  info on operators:
  *   01-- is binary operator
@@ -13,7 +14,7 @@
  * 0400-- is leaf of tree
  * *0XX000-- XX is priority of operator
  */
-int opdope[] {
+int opdope_pass0[OPDOPE_PASS0_SIZE] {
 	000000,	/* EOFC */
 	000000,	/* ; */
 	000000,	/* { */
@@ -157,14 +158,14 @@ char cvtab[4][4] {
 /*
  * relate conversion numbers to operators
  */
-char	cvntab[] {
+char	cvntab[CVNTAB_SIZE] {
 	0, ITOF, ITOL, LTOF, ITOP, PTOI, FTOI, LTOI, FTOL, LTOP,
 };
 
 /*
  * character type table
  */
-char ctab[] {
+char ctab[CTAB_SIZE] {
 	EOFC,	INSERT,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,
 	UNKN,	SPACE,	NEWLN,	SPACE,	SPACE,	UNKN,	UNKN,	UNKN,
 	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,
