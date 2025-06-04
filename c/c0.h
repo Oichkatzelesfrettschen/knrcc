@@ -149,7 +149,7 @@ struct swtab {
 
 char	cvtab[4][4];
 char	filename[64];
-int	opdope[];
+extern int	opdope_pass0[];
 char	ctab[];
 char	symbuf[NCPS+2];
 int	hshused;

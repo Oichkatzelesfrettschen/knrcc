@@ -5,7 +5,7 @@
 /*
  * Operator dope table-- see description in c0.
  */
-int opdope[] {
+int opdope_pass1[] {
 	000000,	/* EOFC */
 	000000,	/* ; */
 	000000,	/* { */

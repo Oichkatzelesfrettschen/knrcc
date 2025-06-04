@@ -1,0 +1,8 @@
+block()
+cblock()
+chkfun()
+convert()
+disarray()
+fblock()
+nblock()
+xprtype()

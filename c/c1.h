@@ -65,7 +65,7 @@ struct	ftconst {
 };
 
 /*
- * Node used for field assignemnts
+ * Node used for field assignments
  */
 struct	fasgn {
 	int	op;
@@ -99,6 +99,8 @@ struct	swtab {
 	int	swval;
 };
 
+void strasg(struct fasgn *atp);
+
 char	maprel[];
 char	notrel[];
 int	nreg;
@@ -113,7 +115,7 @@ struct	table	sptab[];
 struct	table	lsptab[1];
 struct	instab	instab[];
 struct	instab	branchtab[];
-int	opdope[];
+extern	int	opdope_pass1[];
 char	*opntab[];
 int	nstack;
 int	nfloat;

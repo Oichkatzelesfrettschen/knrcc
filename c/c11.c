@@ -1063,8 +1063,7 @@ outname(s)
 	return(s);
 }
 
-strasg(atp)
-struct fasgn *atp;
+void strasg(struct fasgn *atp)
 {
 	register struct tnode *tp;
 	register nwords, i;

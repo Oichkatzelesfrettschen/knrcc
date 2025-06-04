@@ -13,7 +13,7 @@
  * 0400-- is leaf of tree
  * *0XX000-- XX is priority of operator
  */
-int opdope[] {
+int opdope_pass0[] {
 	000000,	/* EOFC */
 	000000,	/* ; */
 	000000,	/* { */
