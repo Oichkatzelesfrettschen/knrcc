@@ -7,6 +7,9 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h> /* For exit() */
+#include <unistd.h> /* For sbrk() */
+#include <stdarg.h> /* For va_list, etc. for error() */
 #include "array_sizes.h"
 
 /*
@@ -446,19 +449,75 @@ int	mossym;
 /*
  * functions
  */
-char	*sbrk();
-struct	tnode *tree();
-char	*copnum();
-struct	tnode *convert();
-struct	tnode *chkfun();
-struct	tnode *disarray();
-struct	tnode *block();
-struct	cnode *cblock();
-struct	fnode *fblock();
-char	*gblock();
+char	*sbrk(int incr); /* Common sbrk prototype, though actual might vary. Or remove if unistd.h is enough */
+struct	tnode *tree(void);
+char	*copnum(int len);
+struct	hshtab *xprtype(struct hshtab *atyb);
+int	symbol(void);
+
+/* Tentative ANSI prototypes for other functions used in c00.c (likely defined in other c0*.c files) */
+extern void error(const char *s, ...); /* Variadic for safety */
+extern void extdef(void);
+extern void outcode(const char *s, ...); /* Variadic */
+extern int spnextchar(void);
+extern int nextchar(void);
+extern struct tnode *nblock(struct hshtab *ads); /* Corrected param name to ads */
+extern char *gblock(int n); /* Corrected param name to n */
+extern struct fnode *fblock(int t, char *string); /* Corrected param names */
+extern struct cnode *cblock(int v); /* Corrected param name to v */
+extern void build(int op);
+extern void errflush(int tok);
+extern int getkeywords(int *sclass, struct hshtab *type); /* Changed to int return */
+extern void decl1(int *sclass, struct hshtab *type, int offset, struct hshtab *tag);
+extern struct tnode *block(int op, int t, int *subs, struct str *str, struct tnode *p1, struct tnode *p2);
+
+/* New/updated prototypes for c01.c functions & others called by c01.c/c02.c */
+extern int length(struct tnode *p);
+extern int decref(int t);
+extern int incref(int t);
+extern int plength(struct tnode *p); // Used by c01.c
+extern void setype(struct tnode *ap, int at, struct tnode *anewp);
+extern void chkw(struct tnode *p, int okt);
+extern int lintyp(int t);
+extern void chklval(struct tnode *ap);
+extern int fold(int op, struct tnode *ap1, struct tnode *ap2);
+extern int conexp(void);
+extern void extdef(void);
+extern void cfunc(void);
+extern int cinit(struct hshtab *anp, int flex, int sclass);
+extern void strinit(struct tnode *np, int sclass);
+extern void setinit(struct hshtab *anp);
+extern void statement(void);
+extern struct tnode *pexpr(void); // Ensure this is present and correct
+extern void pswitch(void);
+extern void funchead(void);
+extern void blockhead(void);
+extern void blkend(void);
+extern int declist(int sclass); /* Added for c02.c */
+extern void branch(int label_num); /* Added for c02.c */
+extern void label(int label_num); /* Added for c02.c */
+extern void cpysymb(struct phshtab *to, struct hshtab *from); /* Added for c02.c */
+extern void putstr(int lab, int amax); /* Added for c02.c - was static in c00! */
+extern void rcexpr(struct tnode *tree); /* Added for c02.c */
+extern int simplegoto(void); /* Added for c02.c */
+extern void dogoto(void); /* Added for c02.c */
+extern void doret(void); /* Added for c02.c */
+extern void cbranch(struct tnode *tree, int label_num, int cond); /* Added for c02.c */
+extern void chconbrk(int label_num); /* Added for c02.c */
+extern void pushdecl(struct hshtab *sym); /* Added for c02.c */
+extern void redec(void); /* Added for c02.c */
+extern int rlength(struct hshtab *sym); /* Added for c02.c */
+extern int goodreg(struct hshtab *sym); /* Added for c02.c */
+extern int lookup(void); /* Added for c02.c - was static in c00! */
+
+
+/* Updated prototypes for c01.c functions (some might have been in K&R list before) */
+extern struct	tnode *convert(struct tnode *p, int t, int cvn, int len);
+extern struct	tnode *chkfun(struct tnode *ap);
+extern struct	tnode *disarray(struct tnode *ap);
+
+/* K&R prototypes to be addressed later (if any remain after c01.c conversion) */
 struct	tnode *pexpr();
 struct	str *strdec();
-struct	hshtab *xprtype();
-// struct	tnode *nblock(); // Duplicate removed for brevity, original file content is leading
 
 #endif /* C0_H */

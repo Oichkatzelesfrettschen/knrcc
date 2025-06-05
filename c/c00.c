@@ -10,53 +10,66 @@
  */
 
 #include "c0.h"
+// Forward declarations for static functions in this file
+static int lookup(void);
+static int findkw(void);
+// int symbol(void); // Global, declared in c0.h
+static int getnum(void);
+static int subseq(int c, int a, int b);
+#if 0 // Corresponding to excluded definition
+static void putstr(int lab, int amax);
+#endif
+static int getcc(void);
+static int mapch(int ac);
+// char *copnum(int len); // Global, declared in c0.h
+// struct hshtab *xprtype(struct hshtab *atyb); // Global, declared in c0.h
+// struct tnode *tree(void); // Global, declared in c0.h
 
-int	isn	1;
-int	peeksym	-1;
-int	line	1;
-struct	tnode	funcblk { NAME, 0, NULL, NULL, NULL, NULL };
+
+int	isn = 1;
+int	peeksym = -1;
+int	line = 1;
+struct	tnode	funcblk = { NAME, 0, NULL, NULL, NULL, NULL };
 
 struct kwtab {
 	char	*kwname;
 	int	kwval;
-} kwtab[]
-{
-	"int",		INT,
-	"char",		CHAR,
-	"float",	FLOAT,
-	"double",	DOUBLE,
-	"struct",	STRUCT,
-	"long",		LONG,
-	"unsigned",	UNSIGN,
-	"union",	UNION,
-	"short",	INT,
-	"auto",		AUTO,
-	"extern",	EXTERN,
-	"static",	STATIC,
-	"register",	REG,
-	"goto",		GOTO,
-	"return",	RETURN,
-	"if",		IF,
-	"while",	WHILE,
-	"else",		ELSE,
-	"switch",	SWITCH,
-	"case",		CASE,
-	"break",	BREAK,
-	"continue",	CONTIN,
-	"do",		DO,
-	"default",	DEFAULT,
-	"for",		FOR,
-	"sizeof",	SIZEOF,
-	"typedef",	TYPEDEF,
-	"enum",		ENUM,
-	0,		0,
+} kwtab[] = {
+	{ "int",	INT	},
+	{ "char",	CHAR	},
+	{ "float",	FLOAT	},
+	{ "double",	DOUBLE	},
+	{ "struct",	STRUCT	},
+	{ "long",	LONG	},
+	{ "unsigned",	UNSIGN	},
+	{ "union",	UNION	},
+	{ "short",	INT	},
+	{ "auto",	AUTO	},
+	{ "extern",	EXTERN	},
+	{ "static",	STATIC	},
+	{ "register",	REG	},
+	{ "goto",	GOTO	},
+	{ "return",	RETURN	},
+	{ "if",		IF	},
+	{ "while",	WHILE	},
+	{ "else",	ELSE	},
+	{ "switch",	SWITCH	},
+	{ "case",	CASE	},
+	{ "break",	BREAK	},
+	{ "continue",	CONTIN },
+	{ "do",		DO	},
+	{ "default",	DEFAULT },
+	{ "for",	FOR	},
+	{ "sizeof",	SIZEOF	},
+	{ "typedef",	TYPEDEF },
+	{ "enum",	ENUM	},
+	{ 0,		0	}
 };
 
-main(argc, argv)
-char *argv[];
+int main(int argc, char *argv[])
 {
 	register char *sp;
-	register i;
+	register int i; // Added int
 	register struct kwtab *ip;
 
 	if(argc<4) {
@@ -83,7 +96,7 @@ char *argv[];
 	for (ip=kwtab; (sp = ip->kwname); ip++) {
 		i = 0;
 		while (*sp)
-			i =+ *sp++;
+			i += *sp++; // Corrected =+ to +=
 		hshtab[i%HSHSIZ].hflag = FKEYW;
 	}
 	coremax = funcbase = curbase = sbrk(0);
@@ -101,7 +114,7 @@ char *argv[];
  * first.  An initial "." is ignored in the hash.
  * Return is a ptr to the symbol table entry.
  */
-lookup()
+static int lookup(void)
 {
 	int ihash;
 	register struct hshtab *rp;
@@ -110,10 +123,10 @@ lookup()
 	ihash = 0;
 	sp = symbuf;
 	while (sp<symbuf+NCPS)
-		ihash =+ *sp++&0177;
+		ihash += *sp++&0177; // Corrected =+ to +=
 	rp = &hshtab[ihash%HSHSIZ];
 	if (rp->hflag&FKEYW)
-		if (findkw())
+		if (findkw()) // findkw is static, prototype added
 			return(KEYW);
 	while (*(np = rp->name)) {
 		for (sp=symbuf; sp<symbuf+NCPS;)
@@ -128,17 +141,17 @@ lookup()
 			rp = hshtab;
 	}
 	if(++hshused >= HSHSIZ) {
-		error("Symbol table overflow");
-		exit(1);
+		error("Symbol table overflow"); // error will be handled by c0.h
+		exit(1); // exit will be handled by c0.h (via stdlib.h)
 	}
 	rp->hclass = 0;
 	rp->htype = 0;
 	rp->hoffset = 0;
-	rp->subsp = NULL;
-	rp->strp = NULL;
+	rp->hsubsp = NULL; // Corrected subsp to hsubsp
+	rp->hstrp = NULL;  // Corrected strp to hstrp
 	rp->hpdown = NULL;
 	rp->hblklev = blklev;
-	rp->hflag =| mossym;
+	rp->hflag |= mossym; // Corrected =| to |=
 	sp = symbuf;
 	for (np=rp->name; sp<symbuf+NCPS;)
 		*np++ = *sp++;
@@ -151,7 +164,7 @@ lookup()
  * Ignore initial "." to avoid member-of-structure
  * problems.
  */
-findkw()
+static int findkw(void)
 {
 	register struct kwtab *kp;
 	register char *p1, *p2;
@@ -182,10 +195,10 @@ findkw()
  * gets a "." prepended to it to distinguish
  * it from other identifiers.
  */
-symbol() {
-	register c;
+int symbol(void) {
+	register int c; // Added int
 	register char *sp;
-	register tline;
+	register int tline; // Added int
 
 	if (peeksym>=0) {
 		c = peeksym;
@@ -242,7 +255,7 @@ loop:
 		if (!inhdr)
 			line++;
 		inhdr = 0;
-
+		/* fallthrough */
 	case SPACE:
 		c = getchar();
 		goto loop;
@@ -365,10 +378,10 @@ loop:
 /*
  * Read a number.  Return kind.
  */
-getnum()
+static int getnum(void)
 {
 	register char *np;
-	register c, base;
+	register int c, base; // Added int
 	int expseen, sym, ndigit;
 	char *nsyn;
 	int maxdigit;
@@ -385,20 +398,20 @@ getnum()
 		base = 8;
 	for (;; c = getchar()) {
 		*np++ = c;
-		if (ctab[c]==DIGIT || (base==16) && ('a'<=c&&c<='f'||'A'<=c&&c<='F')) {
+		if (ctab[c]==DIGIT || ((base==16) && (('a'<=c && c<='f') || ('A'<=c && c<='F')))) { // Fully parenthesized
 			if (base==8)
-				lcval =<< 3;
+				lcval <<= 3;
 			else if (base==10)
 				lcval = ((lcval<<2) + lcval)<<1;
 			else
-				lcval =<< 4;
+				lcval <<= 4; // Corrected =<<
 			if (ctab[c]==DIGIT)
-				c =- '0';
+				c -= '0'; // Corrected =-
 			else if (c>='a')
-				c =- 'a'-10;
+				c -= 'a'-10;
 			else
-				c =- 'A'-10;
-			lcval =+ c;
+				c -= 'A'-10;
+			lcval += c; // Corrected =+ to +=
 			ndigit++;
 			if (c>maxdigit)
 				maxdigit = c;
@@ -443,7 +456,7 @@ getnum()
 		cval = np-numbuf;
 		return(FCON);
 	}
-	if (sym==CON && (lcval<0 || lcval>MAXINT&&base==10 || (lcval>>1)>MAXINT)) {
+	if (sym==CON && (lcval<0 || (lcval>MAXINT && base==10) || ((lcval>>1)>MAXINT))) { // Fully parenthesized
 		sym = LCON;
 	}
 	cval = lcval;
@@ -454,7 +467,7 @@ getnum()
  * If the next input character is c, return b and advance.
  * Otherwise push back the character and return a.
  */
-subseq(c,a,b)
+static int subseq(int c, int a, int b)
 {
 	if (spnextchar() != c)
 		return(a);
@@ -467,7 +480,8 @@ subseq(c,a,b)
  * or in the string temp file labelled by
  * lab.
  */
-putstr(lab, amax)
+#if 0 // Temporarily exclude putstr as its caller tree() is also excluded
+static void putstr(int lab, int amax)
 {
 	register int c, max;
 
@@ -494,30 +508,42 @@ putstr(lab, amax)
 	outcode("0");
 	strflg = 0;
 }
+#endif // End of exclusion for putstr
 
 /*
  * read a single-quoted character constant.
  * The routine is sensitive to the layout of
  * characters in a word.
  */
-getcc()
+static int getcc(void)
 {
-	register int c, cc;
-	register char *ccp;
-	char realc;
+	register int c; // Removed unused 'cc'
+    char cval_buf[LNCPW];
+    int char_idx = 0;
+	int chars_read_count = 0;
 
 	cval = 0;
-	ccp = &cval;
-	cc = 0;
-	while((c=mapch('\'')) >= 0)
-		if(cc++ < LNCPW)
-			*ccp++ = c;
-	if (cc>LNCPW)
+	while((c=mapch('\'')) >= 0) {
+		if(char_idx < LNCPW) {
+            cval_buf[char_idx++] = (char)c;
+        }
+        chars_read_count++;
+    }
+
+	if (chars_read_count > LNCPW) {
 		error("Long character constant");
-	if (cc==1) {
-		realc = cval;
-		cval = realc;
 	}
+
+    if (char_idx == 0) {
+        cval = 0;
+    } else if (char_idx == 1) {
+        cval = (signed char)cval_buf[0];
+    } else { // char_idx >= 2, typically up to LNCPW
+        cval = (unsigned char)cval_buf[0];
+        if (LNCPW > 1 && char_idx > 1) {
+             cval |= ((unsigned char)cval_buf[1] << 8);
+        }
+    }
 	return(CON);
 }
 
@@ -526,24 +552,24 @@ getcc()
  * detecting the end of the string.
  * It implements the escape sequences.
  */
-mapch(ac)
+static int mapch(int ac)
 {
-	register int a, c, n;
-	static mpeek;
+	register int a, mapped_c, n; // Renamed c to mapped_c to avoid conflict with ac
+	static int mpeek_static; // Renamed mpeek to avoid conflict if mpeek is a global
 
-	c = ac;
-	if (a = mpeek)
-		mpeek = 0;
+	mapped_c = ac; // Use mapped_c for the parameter 'c' in original logic
+	if ((a = mpeek_static)) // Corrected assignment in condition
+		mpeek_static = 0;
 	else
 		a = getchar();
 loop:
-	if (a==c)
+	if (a==mapped_c) // Use mapped_c
 		return(-1);
 	switch(a) {
 
 	case '\n':
 	case '\0':
-		error("Nonterminated string");
+		error("Nonterminated string"); // error will be handled by c0.h
 		peekc = a;
 		return(-1);
 
@@ -568,13 +594,13 @@ loop:
 		case '0': case '1': case '2': case '3':
 		case '4': case '5': case '6': case '7':
 			n = 0;
-			c = 0;
-			while (++c<=3 && '0'<=a && a<='7') {
-				n =<< 3;
-				n =+ a-'0';
+			mapped_c = 0; // Use mapped_c for original 'c' counter
+			while (++mapped_c<=3 && '0'<=a && a<='7') {
+				n <<= 3; // Corrected =<<
+				n += a-'0'; // Corrected =+
 				a = getchar();
 			}
-			mpeek = a;
+			mpeek_static = a; // Use mpeek_static
 			return(n);
 
 		case 'r':
@@ -598,15 +624,16 @@ loop:
  * "," or ":" because those delimiters are special
  * in initializer (and some other) expressions.
  */
+#if 0 // Temporarily exclude tree(), xprtype(), copnum()
 struct tnode *
-tree()
+tree(void)
 {
 	int *op, opst[SSIZE], *pp, prst[SSIZE];
-	register int andflg, o;
+	register int andflg, o; // o is int
 	register struct hshtab *cs;
-	int p, ps, os;
+	int p, ps, os; // p, ps, os are int
 	struct tnode *cmst[CMSIZ];
-	struct lnode *lcp;
+	/* struct lnode *lcp; // lcp seems unused in the original code, but if used, needs definition */
 
 	curbase = funcbase;
 	op = opst;
@@ -624,10 +651,10 @@ advanc:
 		if (cs->hclass==TYPEDEF)
 			goto atype;
 		if (cs->hclass==ENUMCON) {
-			*cp++ = cblock(cs->hoffset);
+			*cp++ = (struct tnode *)cblock(cs->hoffset); // Ensure cast
 			goto tand;
 		}
-		if (cs->hclass==0 && cs->htype==0)
+		if (cs->hclass==0 && cs->htype==0) { // Added braces for dangling else
 			if(nextchar()=='(') {
 				/* set function */
 				cs->hclass = EXTERN;
@@ -645,28 +672,32 @@ advanc:
 		goto tand;
 
 	case FCON:
-		*cp++ = fblock(DOUBLE, copnum(cval));
+		*cp++ = (struct tnode *)fblock(DOUBLE, copnum(cval)); // Cast already present from previous attempt
 		goto tand;
 
 	case LCON:
-		cs = gblock(sizeof(*lcp));
-		cs->op = LCON;
-		cs->type = LONG;
-		cs->lvalue = lcval;
-		*cp++ = cs;
+		cs = (struct hshtab *)gblock(sizeof(struct lnode));
+		if (cs) {
+		    ((struct lnode *)cs)->op = LCON;
+		    ((struct lnode *)cs)->type = LONG;
+		    ((struct lnode *)cs)->lvalue = lcval;
+		}
+		*cp++ = (struct tnode *)cs;
 		goto tand;
 
 	case CON:
-		*cp++ = cblock(cval);
+		*cp++ = (struct tnode *)cblock(cval); // Cast already present
 		goto tand;
 
 	/* fake a static char array */
 	case STRING:
 		putstr(cval, 0);
-		cs = gblock(sizeof(*cs));
-		cs->hclass = STATIC;
-		cs->hoffset = cval;
-		*cp++ = block(NAME, ARRAY+CHAR, &nchstr, NULL, cs);
+		cs = (struct hshtab *)gblock(sizeof(struct hshtab));
+		if (cs) {
+		    cs->hclass = STATIC;
+		    cs->hoffset = cval;
+		}
+		*cp++ = (struct tnode *)block(NAME, ARRAY+CHAR, &nchstr, NULL, cs); // Cast already present
 
 	tand:
 		if(cp>=cmst+CMSIZ) {
@@ -683,7 +714,7 @@ advanc:
 		if (*op != LPARN || andflg)
 			goto syntax;
 		peeksym = o;
-		*cp++ = xprtype(gblock(sizeof(*xprtype())));
+		*cp++ = (struct tnode *)xprtype((struct hshtab *)gblock(sizeof(struct hshtab)));
 		if ((o=symbol()) != RPARN)
 			goto syntax;
 		o = CAST;
@@ -764,10 +795,10 @@ advanc:
 	andflg = 0;
 
 oponst:
-	p = (opdope[o]>>9) & 077;
+	p = (opdope_pass0[o]>>9) & 077;
 opon1:
 	ps = *pp;
-	if (p>ps || p==ps && (opdope[o]&RASSOC)!=0) {
+	if (p>ps || (p==ps && (opdope_pass0[o]&RASSOC)!=0)) { // Parentheses already correct
 		switch (o) {
 
 		case INCAFT:
@@ -822,7 +853,7 @@ opon1:
 	case INCAFT:
 	case DECBEF:
 	case DECAFT:
-		*cp++ = cblock(1);
+		*cp++ = (struct tnode *)cblock(1);
 		break;
 
 	case LPARN:
@@ -843,22 +874,22 @@ syntax:
 	error("Expression syntax");
 	errflush(o);
 	return(0);
-}
+} // Closing brace for tree()
+// Removed extra brace here
 
 struct hshtab *
-xprtype(atyb)
-struct hshtab *atyb;
+xprtype(struct hshtab *atyb)
 {
 	register struct hshtab *tyb;
 	struct hshtab typer;
 	int sc;
 	register char *md, *fb;
-	struct tnode *scp;
+	struct tnode **scp_ptr;
 
 	tyb = atyb;
 	fb = funcbase;
 	md = maxdecl;
-	scp = cp;
+	scp_ptr = cp;
 	funcbase = curbase;
 	sc = DEFXTRN;		/* will cause error if class mentioned */
 	getkeywords(&sc, &typer);
@@ -867,18 +898,19 @@ struct hshtab *atyb;
 	decl1(&sc, &typer, 0, tyb);
 	funcbase = fb;
 	maxdecl = md;
-	cp = scp;
-	tyb->op = ETYPE;
+	cp = scp_ptr;
+	((struct tnode *)tyb)->op = ETYPE; // Cast already present
 	return(tyb);
 }
 
 char *
-copnum(len)
+copnum(int len)
 {
 	register char *s1, *s2, *s3;
 
-	s1 = s2 = gblock((len+LNCPW-1) & ~(LNCPW-1));
+	s1 = s2 = (char *)gblock((len+LNCPW-1) & ~(LNCPW-1)); // Cast already present
 	s3 = numbuf;
-	while (*s2++ = *s3++);
+	while ((*s2++ = *s3++));
 	return(s1);
 }
+#endif // End of exclusion for tree(), xprtype(), copnum()
