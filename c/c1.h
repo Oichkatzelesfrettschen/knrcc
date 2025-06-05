@@ -108,6 +108,7 @@ void *getblk(int size);
 
 extern char	maprel[MAPREL_SIZE];
 extern char	notrel[NOTREL_SIZE];
+
 int	nreg;
 int	isn;
 int	namsiz;
@@ -122,6 +123,7 @@ extern struct	instab	instab[INSTAB_SIZE];
 extern struct	instab	branchtab[BRANCHTAB_SIZE];
 extern	int	opdope_pass1[OPDOPE_PASS1_SIZE];
 extern char	*opntab[OPNTAB_SIZE];
+
 int	nstack;
 int	nfloat;
 struct	tname	sfuncr;

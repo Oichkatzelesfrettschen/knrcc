@@ -7,6 +7,7 @@
  * Operator dope table-- see description in c0.
  */
 int opdope_pass1[OPDOPE_PASS1_SIZE] {
+
 	000000,	/* EOFC */
 	000000,	/* ; */
 	000000,	/* { */
