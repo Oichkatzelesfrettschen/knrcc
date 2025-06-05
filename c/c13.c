@@ -2,10 +2,12 @@
  * C second pass -- tables
  */
 #include "c1.h"
+#include "array_sizes.h"
 /*
  * Operator dope table-- see description in c0.
  */
-int opdope_pass1[] {
+int opdope_pass1[OPDOPE_PASS1_SIZE] {
+
 	000000,	/* EOFC */
 	000000,	/* ; */
 	000000,	/* { */
@@ -125,7 +127,7 @@ int opdope_pass1[] {
 	000001,	/* struct assignment setup */
 };
 
-char	*opntab[] {
+char	*opntab[OPNTAB_SIZE] {
 	0,
 	0,
 	0,
@@ -296,7 +298,7 @@ char	jbr[]	"jbr";
  * I (first operand) or I' (second) macros.
  */
 
-struct instab instab[] {
+struct instab instab[INSTAB_SIZE] {
 	LOAD,	mov,	tst,
 	ASSIGN,	mov,	clr,
 	EQUAL,	cmp,	tst,
@@ -350,7 +352,7 @@ struct instab instab[] {
 	LASMOD,	alrem,	alrem,
 	ULSH,	ashc,	ashc,
 	ASULSH,	ashc,	ashc,
-	0,	0,	0};
+	0,	0,	0}; /* Terminator, size is 52 + 1 = 53 */
 
 /*
  * Similar table for relationals.
@@ -361,7 +363,7 @@ struct instab instab[] {
  * instruction is used; it clears the c-bit
  * the c-bit so ptr tests are funny.
  */
-struct instab branchtab[] {
+struct instab branchtab[BRANCHTAB_SIZE] {
 	EQUAL,	jeq,	jne,
 	NEQUAL,	jne,	jeq,
 	LESSEQ,	jle,	jgt,
@@ -382,4 +384,4 @@ struct instab branchtab[] {
 	200+LESSP,	nop,	jbr,
 	200+GREATQP,	jbr,	nop,
 	200+GREATP,	jne,	jeq,
-	0,	0,	0 };
+	0,	0,	0 }; /* Terminator, size is 20 + 1 = 21 */

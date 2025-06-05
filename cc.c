@@ -2,6 +2,11 @@
 # include <stdio.h>
 # include <ctype.h>
 # include <signal.h>
+# include <string.h>
+# include <stdlib.h>
+# include <unistd.h> // For POSIX functions like access, fork, execv, wait
+# include <sys/wait.h> // For wait()
+# include <fcntl.h>    // For creat()
 
 /* cc command */
 
@@ -38,20 +43,26 @@ char	pass1[20] = "/lib/c1";
 char	pass2[20] = "/lib/c2";
 char	passp[20] = "/lib/cpp";
 char	*pref = "/lib/crt0.o";
-char	*copy();
-char	*setsuf();
-char	*strcat();
-char	*strcpy();
+/* ANSI C Prototypes for functions defined in this file */
+char *copy(char *as);
+char *setsuf(char *as, int ch);
+void idexit(int sig);
+void dexit(void);
+void error(const char *s, const char *x);
+int getsuf(char as[]);
+int callsys(char f[], char *v[]);
+int nodup(char **l, char *os);
+void cunlink(char *f);
+/* Removed K&R declarations for strcat, strcpy as they are in <string.h> */
 
-main(argc, argv)
-char *argv[]; 
+int main(int argc, char *argv[])
 {
 	char *t;
 	char *savetsp;
 	char *assource;
 	char **pv, *ptemp[MAXOPT], **pvt;
 	int nc, nl, i, j, c, f20, nxo, na;
-	int idexit();
+	/* int idexit(); Removed from here */
 
 	i = nc = nl = f20 = nxo = 0;
 	setbuf(stdout, (char *)NULL);
@@ -81,9 +92,11 @@ char *argv[];
 			break;
 		case 'E':
 			exflag++;
+			/* fallthrough */
 		case 'P':
 			pflag++;
 			*pv++ = argv[i];
+			/* fallthrough */
 		case 'c':
 			cflag++;
 			break;
@@ -325,13 +338,14 @@ nocom:
 	dexit();
 }
 
-idexit()
+void idexit(int sig)
 {
+	(void)sig; /* Mark sig as unused */
 	eflag = 100;
 	dexit();
 }
 
-dexit()
+void dexit(void)
 {
 	if (!pflag) {
 		cunlink(tmp1);
@@ -345,8 +359,7 @@ dexit()
 	exit(eflag);
 }
 
-error(s, x)
-char *s, *x;
+void error(const char *s, const char *x)
 {
 	fprintf(exflag?stderr:stdout, s, x);
 	putc('\n', exflag? stderr : stdout);
@@ -357,8 +370,7 @@ char *s, *x;
 
 
 
-getsuf(as)
-char as[];
+int getsuf(char as[])
 {
 	register int c;
 	register char *s;
@@ -366,7 +378,7 @@ char as[];
 
 	s = as;
 	c = 0;
-	while(t = *s++)
+	while((t = *s++))
 		if (t=='/')
 			c = 0;
 		else
@@ -378,8 +390,7 @@ char as[];
 }
 
 char *
-setsuf(as, ch)
-char *as;
+setsuf(char *as, int ch)
 {
 	register char *s, *s1;
 
@@ -391,8 +402,7 @@ char *as;
 	return(s1);
 }
 
-callsys(f, v)
-char f[], *v[]; 
+int callsys(char f[], char *v[])
 {
 	int t, status;
 
@@ -407,7 +417,7 @@ char f[], *v[];
 		}
 	while(t!=wait(&status))
 		;
-	if (t = status&0377) {
+	if ((t = status&0377)) {
 		if (t!=SIGINT) {
 			printf("Fatal error in %s\n", f);
 			eflag = 8;
@@ -418,18 +428,17 @@ char f[], *v[];
 }
 
 char *
-copy(as)
-char *as;
+copy(char *as)
 {
-	char *malloc();
+	/* char *malloc(); Removed, stdlib.h provides it */
 	register char *otsp, *s;
 
 	otsp = tsp;
 	s = as;
-	while (*tsp++ = *s++)
+	while ((*tsp++ = *s++))
 		;
 	if (tsp > tsa+CHSPACE) {
-		tsp = tsa = malloc(CHSPACE+50);
+		tsp = tsa = (char *)malloc(CHSPACE+50);
 		if (tsp==NULL) {
 			error("no space for file names", (char *)NULL);
 			dexit();
@@ -438,8 +447,7 @@ char *as;
 	return(otsp);
 }
 
-nodup(l, os)
-char **l, *os;
+int nodup(char **l, char *os)
 {
 	register char *t, *s;
 	register int c;
@@ -447,8 +455,8 @@ char **l, *os;
 	s = os;
 	if (getsuf(s) != 'o')
 		return(1);
-	while(t = *l++) {
-		while(c = *s++)
+	while((t = *l++)) {
+		while((c = *s++))
 			if (c != *t++)
 				break;
 		if (*t=='\0' && c=='\0')
@@ -458,8 +466,7 @@ char **l, *os;
 	return(1);
 }
 
-cunlink(f)
-char *f;
+void cunlink(char *f)
 {
 	if (f==NULL)
 		return;

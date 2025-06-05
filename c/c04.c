@@ -11,9 +11,9 @@
  * Reduce the degree-of-reference by one.
  * e.g. turn "ptr-to-int" into "int".
  */
-decref(at)
+int decref(int at)
 {
-	register t;
+	register int t; // K&R t was implicitly int
 
 	t = at;
 	if ((t & ~TYPE) == 0) {
@@ -27,7 +27,7 @@ decref(at)
  * Increase the degree of reference by
  * one; e.g. turn "int" to "ptr-to-int".
  */
-incref(t)
+int incref(int t)
 {
 	return(((t&~TYPE)<<TYLEN) | (t&TYPE) | PTR);
 }
@@ -161,13 +161,12 @@ label(l)
  * is some kind of pointer; return the size of the object
  * to which the pointer points.
  */
-plength(ap)
-struct tname *ap;
+plength(struct tnode *ap) // Changed parameter to struct tnode *ap
 {
-	register t, l;
+	register int t, l; // K&R t, l were implicitly int
 	register struct tnode *p;
 
-	p = ap;
+	p = ap; // No cast needed if ap is already tnode*
 	if (p==0 || ((t=p->type)&~TYPE) == 0)		/* not a reference */
 		return(1);
 	p->type = decref(t);
@@ -180,10 +179,9 @@ struct tname *ap;
  * return the number of bytes in the object
  * whose tree node is acs.
  */
-length(acs)
-struct tnode *acs;
+length(struct tnode *acs)
 {
-	register t, elsz;
+	register int t, elsz; // K&R t, elsz were implicitly int
 	long n;
 	register struct tnode *cs;
 	int nd;
@@ -194,7 +192,7 @@ struct tnode *acs;
 	nd = 0;
 	while ((t&XTYPE) == ARRAY) {
 		t = decref(t);
-		n =* cs->subsp[nd++];
+		n *= cs->subsp[nd++]; // Corrected K&R n =* ...
 	}
 	if ((t&~TYPE)==FUNC)
 		return(0);
