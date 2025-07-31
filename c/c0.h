@@ -466,9 +466,9 @@ extern char *gblock(int n); /* Corrected param name to n */
 extern struct fnode *fblock(int t, char *string); /* Corrected param names */
 extern struct cnode *cblock(int v); /* Corrected param name to v */
 extern void build(int op);
-extern void errflush(int tok);
+extern void errflush(int ao);
 extern int getkeywords(int *sclass, struct hshtab *type); /* Changed to int return */
-extern void decl1(int *sclass, struct hshtab *type, int offset, struct hshtab *tag);
+extern void decl1(int *sclass, struct hshtab *type, int offset, struct hshtab *tag); // FIXME: Conflicts with c03.c's static decl1. Investigate if this is for a different global func or needs removal.
 extern struct tnode *block(int op, int t, int *subs, struct str *str, struct tnode *p1, struct tnode *p2);
 
 /* New/updated prototypes for c01.c functions & others called by c01.c/c02.c */
@@ -496,7 +496,7 @@ extern void blkend(void);
 extern int declist(int sclass); /* Added for c02.c */
 extern void branch(int label_num); /* Added for c02.c */
 extern void label(int label_num); /* Added for c02.c */
-extern void cpysymb(struct phshtab *to, struct hshtab *from); /* Added for c02.c */
+extern void cpysymb(struct phshtab *s1, struct phshtab *s2); /* Added for c02.c */
 extern void putstr(int lab, int amax); /* Added for c02.c - was static in c00! */
 extern void rcexpr(struct tnode *tree); /* Added for c02.c */
 extern int simplegoto(void); /* Added for c02.c */
@@ -504,10 +504,10 @@ extern void dogoto(void); /* Added for c02.c */
 extern void doret(void); /* Added for c02.c */
 extern void cbranch(struct tnode *tree, int label_num, int cond); /* Added for c02.c */
 extern void chconbrk(int label_num); /* Added for c02.c */
-extern void pushdecl(struct hshtab *sym); /* Added for c02.c */
+extern void pushdecl(struct phshtab *asp); /* Added for c02.c */
 extern void redec(void); /* Added for c02.c */
-extern int rlength(struct hshtab *sym); /* Added for c02.c */
-extern int goodreg(struct hshtab *sym); /* Added for c02.c */
+extern int rlength(struct tnode *cs); /* Added for c02.c */
+extern int goodreg(struct hshtab *hp); /* Added for c02.c */
 extern int lookup(void); /* Added for c02.c - was static in c00! */
 
 
@@ -517,7 +517,6 @@ extern struct	tnode *chkfun(struct tnode *ap);
 extern struct	tnode *disarray(struct tnode *ap);
 
 /* K&R prototypes to be addressed later (if any remain after c01.c conversion) */
-struct	tnode *pexpr();
-struct	str *strdec();
+extern struct str *strdec(int mosf, int kind);
 
 #endif /* C0_H */

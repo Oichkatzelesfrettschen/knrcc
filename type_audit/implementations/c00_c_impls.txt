@@ -1,0 +1,19 @@
+14:static int lookup(void);
+15:static int findkw(void);
+17:static int getnum(void);
+18:static int subseq(int c, int a, int b);
+20:static void putstr(int lab, int amax);
+22:static int getcc(void);
+23:static int mapch(int ac);
+69:int main(int argc, char *argv[])
+117:static int lookup(void)
+167:static int findkw(void)
+198:int symbol(void) {
+381:static int getnum(void)
+470:static int subseq(int c, int a, int b)
+484:static void putstr(int lab, int amax)
+518:static int getcc(void)
+555:static int mapch(int ac)
+629:tree(void)
+881:xprtype(struct hshtab *atyb)
+907:copnum(int len)

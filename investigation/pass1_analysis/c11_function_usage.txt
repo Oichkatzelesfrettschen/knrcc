@@ -1,0 +1,216 @@
+KNRCC c11.c Static Function Usage Analysis
+===========================================
+Timestamp: Thu Jun  5 23:42:14 UTC 2025
+
+=== Searching for calls to max ===
+c/c12.c:153:	d1 = max(degree(tree->tr1), islong(tree->type));
+c/c12.c:154:	d2 = max(degree(tree->tr2), 0);
+c/c12.c:192:		tree->degree = max(d1, d2);
+c/c12.c:275:		tree->degree = d1==d2? d1+islong(tree->type): max(d1, d2);
+c/c12.c:552:		tree->degree = max(islong(tree->type), degree(subtre));
+c/c12.c:681:	d = max(degree(tree), islong(tree->type));
+c/c12.c:696:		t1->degree = d = d==d1? d+islong(t1->type): max(d, d1);
+c/c12.c:713:		tree->degree = max(degree(tree->tr1), islong(tree->type));
+
+=== Searching for calls to degree ===
+c/c12.c:141:		if ((d1=degree(tree->tr1)) < (d2=degree(tree->tr2))
+c/c12.c:153:	d1 = max(degree(tree->tr1), islong(tree->type));
+c/c12.c:154:	d2 = max(degree(tree->tr2), 0);
+c/c12.c:552:		tree->degree = max(islong(tree->type), degree(subtre));
+c/c12.c:681:	d = max(degree(tree), islong(tree->type));
+c/c12.c:687:		d1 = degree(t);
+c/c12.c:713:		tree->degree = max(degree(tree->tr1), islong(tree->type));
+c/c12.c:985:	d = degree(tree);
+c/c12.c:987:		if ((d1=degree(list->llist[i]))<d) {
+
+=== Searching for calls to pname ===
+c/c10.c:547:		pname(p, c);
+c/c10.c:716:				pname(p->tr1, 0);
+c/c10.c:1120:			pname(tree->tr1, 0);
+
+=== Searching for calls to regerr ===
+c/c11.c:126:                    regerr();
+c/c11.c:154:			regerr();
+
+=== Searching for calls to pbase ===
+c/c11.c:131:                    pbase(p);
+c/c11.c:139:                    pbase(p);
+
+=== Searching for calls to xdcalc ===
+c/c10.c:652:			  || flag&01&&xdcalc(p2,nreg-rreg-1)<=(opt->tabdeg2&077)
+c/c10.c:653:			  || flag&02&&xdcalc(p1,nreg-rreg-1)<=(opt->tabdeg1&077))) {
+c/c10.c:871:				if (xdcalc(p1, 16) > 12
+
+=== Searching for calls to dcalc ===
+c/c10.c:106:	d1 = dcalc(p1, nrleft);
+c/c10.c:129:		d2 = dcalc(p2, nrleft);
+c/c10.c:733:		if (dcalc(p1, 5)>12 && !match(p1, cctab, 10, 0))
+c/c10.c:997:	if (tree->op!=STAR && dcalc(tree, nreg-reg) > 12)
+c/c12.c:149:		 && (dcalc(tree->tr1, 0) <= 12 || tree->tr1->op==STAR)
+c/c12.c:692:		if (op==EXOR && dcalc(t, 0)<=12) {
+
+=== Searching for calls to notcompat ===
+c/c10.c:138:		if (notcompat(p1, opt->tabtyp1, op)) {
+c/c10.c:145:			if (notcompat(p2,opt->tabtyp2, 0))
+
+=== Searching for calls to prins ===
+c/c10.c:556:		prins(tree->op, c, instab);
+
+=== Searching for calls to collcon ===
+c/c10.c:626:			if(collcon(p) && ctable!=sptab) {
+c/c10.c:707:		if(collcon(p)) {
+
+=== Searching for calls to isfloat ===
+c/c10.c:351:			modf = isfloat(tree);
+c/c10.c:522:		if (!isfloat(tree))
+c/c10.c:579:		if (isfloat(p))
+c/c10.c:855:			if (p1->class != REG||p1->type==CHAR||isfloat(p->tr2))
+c/c10.c:1056:	if (nstack || isfloat(tree) || tree->type==LONG) {
+c/c10.c:1191:	printf("mov%c	r%d,r%d\n", isfloat(tree), r0, r1);
+c/c12.c:627:	flt = isfloat(tree);
+c/c12.c:967:	if (!isfloat(tree)) {
+
+=== Searching for calls to oddreg ===
+c/c10.c:438:	reg = oddreg(tree, reg);
+c/c10.c:650:			if ((c&020)==0 && oddreg(tree, 0)==0 && tree->type!=LONG
+
+=== Searching for calls to arlength ===
+c/c10.c:1058:		retval = arlength(tree->type);
+
+=== Searching for calls to pswitch ===
+c/c02.c:471:			pswitch();
+c/c02.c:622:void pswitch(void)
+
+=== Searching for calls to breq ===
+
+=== Searching for calls to sort ===
+
+=== Searching for calls to ispow2 ===
+c/c10.c:859:				if (!ispow2(p->tr2))
+c/c10.c:890:			if (!ispow2(p))
+c/c12.c:203:		if (tree->tr1->type==UNSIGN && ispow2(tree))
+c/c12.c:712:	if (tree->op==TIMES && ispow2(tree))
+
+=== Searching for calls to pow2 ===
+c/c10.c:321:		tree = pow2(tree);
+c/c10.c:861:				p->tr2 = pow2(p->tr2);
+c/c11.c:27:static struct tnode *pow2(struct tnode *atree);
+c/c12.c:204:			return(pow2(tree));
+
+=== Searching for calls to cbranch ===
+c/c02.c:361:				cbranch(np, o2=isn++, 0);
+c/c02.c:371:				cbranch(np, o1=isn++, 0);
+c/c02.c:385:				cbranch(np, o2, 1);
+c/c02.c:395:			cbranch(np, o1=isn++, 0);
+c/c02.c:413:			cbranch(pexpr(), brklab=isn++, 0);
+c/c02.c:441:				cbranch(tree(), o3, 1);
+c/c02.c:565:		cbranch(tree(), brklab, 0);
+c/c04.c:42:void cbranch(struct tnode *tree, int label_num, int cond)
+c/c10.c:415:		cbranch(tree, c=isn++, 1, reg);
+c/c10.c:426:		cbranch(tree->tr1, c=isn++, 0, reg);
+
+=== Searching for calls to branch ===
+c/c02.c:127:	branch(sloc);
+c/c02.c:137:	branch(sloc+1);
+c/c02.c:345:				branch(o1);
+c/c02.c:399:				branch(o2);
+c/c02.c:415:			branch(contlab);
+c/c02.c:423:			branch(brklab);
+c/c02.c:428:			branch(contlab);
+c/c02.c:572:		branch(contlab);
+c/c02.c:592:	branch(l);
+c/c02.c:630:	branch(swlab=isn++);
+c/c02.c:634:	branch(brklab);
+c/c04.c:156:void branch(int label_num)
+c/c04.c:361:	branch(retlab);
+c/c10.c:417:		branch(isn, 0);
+c/c10.c:430:		branch(r=isn++, 0);
+
+=== Searching for calls to longrel ===
+
+=== Searching for calls to xlongrel ===
+c/c10.c:790:		if (xlongrel(*string++ - '0'))
+
+=== Searching for calls to label ===
+c/c02.c:128:	label(sloc+1);
+c/c02.c:135:	label(sloc);
+c/c02.c:363:				label(o2);
+c/c02.c:373:				label(o1);
+c/c02.c:400:				label(o1);
+c/c02.c:402:				label(o2);
+c/c02.c:406:			label(o1);
+c/c02.c:412:			label(contlab = isn++);
+c/c02.c:416:			label(brklab);
+c/c02.c:436:			label(o3 = isn++);
+c/c02.c:438:			label(contlab);
+c/c02.c:442:				label(brklab);
+c/c02.c:461:				label(isn++);
+c/c02.c:482:			label(deflab = isn++);
+c/c02.c:492:			label(brklab);
+c/c02.c:524:			label(o1_hs->hoffset);
+c/c02.c:562:	label(contlab);
+c/c02.c:586:	label(contlab);
+c/c02.c:635:	label(swlab);
+c/c02.c:642:	label(brklab);
+c/c04.c:164:void label(int label_num)
+c/c10.c:418:		label(c);
+c/c10.c:420:		label(isn++);
+c/c10.c:431:		label(c);
+c/c10.c:435:		label(r);
+
+=== Searching for calls to popstk ===
+c/c10.c:292:		popstk(r);
+
+=== Searching for calls to psoct ===
+c/c10.c:714:					psoct(p->value);
+c/c11.c:108:		psoct(((struct tconst *)p)->value);
+c/c11.c:122:                psoct(i);
+
+=== Searching for calls to getree ===
+c/c10.c:51:	getree();
+c/c10.c:68:		getree();
+
+=== Searching for calls to geti ===
+
+=== Searching for calls to outname ===
+c/c11.c:38:static char *outname(char *s);
+
+=== Searching for calls to setype ===
+c/c01.c:119:			setype(p1, t1, p1);
+c/c01.c:141:		setype(p1, t, p2);
+c/c01.c:277:void setype(struct tnode *ap, int at, struct tnode *anewp)
+c/c01.c:331:	setype(p, decref(t), p);
+c/c10.c:1026:			setype(tree, INT);
+c/c10.c:1030:			setype(tree, LONG);
+c/c10.c:1075:	setype(tp, STRUCT+PTR);
+
+=== Searching for calls to decref ===
+c/c01.c:96:		*cp++ = block(CALL,decref(t1),p1->subsp,p1->strp,p1,p2);
+c/c01.c:102:		*cp++ = block(STAR, decref(t1), p1->subsp, p1->strp, p1, NULL);
+c/c01.c:290:			t = decref(t);
+c/c01.c:331:	setype(p, decref(t), p);
+c/c02.c:61:				funcblk.type = decref(ds->htype);
+c/c02.c:175:		np->htype = decref(realtype);
+c/c03.c:636:		t = decref(t);
+c/c04.c:17:int decref(int at)
+c/c04.c:182:	p->type = decref(t);
+c/c04.c:204:		t = decref(t);
+c/c20.c:472:			decref(p);
+c/c20.c:486:				decref(p->ref);
+c/c20.c:498:				decref(p->ref);
+c/c20.c:516:					decref(p->forw->ref);
+c/c20.c:526:					decref(rp);
+c/c20.c:618:			decref(p1->ref);
+c/c20.c:640:	decref(p3->ref);
+c/c20.c:654:	decref(tl);
+c/c20.c:687:			decref(p2->ref);
+c/c21.c:192:				decref(p->ref);
+c/c21.c:343:void decref(struct node *p)
+c/c21.c:640:		decref(p->ref);
+
+=== Searching for calls to incref ===
+c/c01.c:107:			*cp++ = block(op,incref(t1),p1->subsp,p1->strp,p1, NULL);
+c/c01.c:118:			t1 = incref(t1);
+c/c01.c:139:		t = incref(t2);
+c/c01.c:292:			t = incref(t);
+c/c04.c:33:int incref(int t)

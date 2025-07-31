@@ -14,7 +14,7 @@
  * 0400-- is leaf of tree
  * *0XX000-- XX is priority of operator
  */
-int opdope_pass0[OPDOPE_PASS0_SIZE] {
+int opdope_pass0[OPDOPE_PASS0_SIZE] = {
 	000000,	/* EOFC */
 	000000,	/* ; */
 	000000,	/* { */
@@ -147,7 +147,7 @@ int opdope_pass0[OPDOPE_PASS0_SIZE] {
  * For = however the left operand can't be converted
  * and the specified conversion is applied to the rhs.
  */
-char cvtab[4][4] {
+char cvtab[4][4] = {
 /*		int	double		long		ptr */
 /* int */	0,	(FTI<<4)+ITF,	(LTI<<4)+ITL,	(ITP<<4)+ITP,	
 /* double */	ITF,	0,		LTF,		XX,
@@ -158,14 +158,14 @@ char cvtab[4][4] {
 /*
  * relate conversion numbers to operators
  */
-char	cvntab[CVNTAB_SIZE] {
+char	cvntab[CVNTAB_SIZE] = {
 	0, ITOF, ITOL, LTOF, ITOP, PTOI, FTOI, LTOI, FTOL, LTOP,
 };
 
 /*
  * character type table
  */
-char ctab[CTAB_SIZE] {
+char ctab[CTAB_SIZE] = {
 	EOFC,	INSERT,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,
 	UNKN,	SPACE,	NEWLN,	SPACE,	SPACE,	UNKN,	UNKN,	UNKN,
 	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,	UNKN,

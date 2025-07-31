@@ -1,0 +1,29 @@
+72:struct node {
+73:	char	op;
+74:	char	subop;
+75:	struct	node	*forw;
+76:	struct	node	*back;
+77:	struct	node	*ref;
+79:	char	*code;
+83:struct optab {
+84:	char	*opstring;
+88:char	line[LSIZE];
+89:struct	node	first;
+90:char	*curlp;
+112:char	*lasta;
+113:char	*lastr;
+114:char	*firstr;
+115:char	revbr[];
+116:char	regs[12][20];
+117:char	conloc[20];
+118:char	conval[20];
+119:char	ccloc[20];
+128:struct optab *ophash[OPHS];
+129:struct	node *nonlab();
+130:char	*copy();
+131:char	*sbrk();
+132:char	*findcon();
+133:struct	node *insertl();
+134:struct	node *codemove();
+135:char	*sbrk();
+136:char	*alloc();

@@ -1,12 +1,17 @@
 #include <stdio.h>
+#include <stdlib.h> // For exit()
+#include <unistd.h> // For unlink()
+
+// Static forward declarations for cvopt.c
+static int flag(void);
+static void put(int c);
 
 int	tabflg;
 int	labno	= 1;
 FILE	*curbuf;
 FILE	*obuf;
 
-main(argc, argv)
-char **argv;
+int main(int argc, char *argv[])
 {
 /*
 	A1 -> A
@@ -306,8 +311,8 @@ pf:
 	goto loop;
 }
 
-flag() {
-	register c, f;
+static int flag(void) {
+	register int c, f;
 
 	f = 0;
 l1:
@@ -353,7 +358,7 @@ l1:
 	return(f);
 }
 
-put(c)
+static void put(int c)
 {
 	if (tabflg) {
 		tabflg = 0;

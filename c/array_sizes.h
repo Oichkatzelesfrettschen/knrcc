@@ -12,4 +12,9 @@
 #define INSTAB_SIZE 53
 #define BRANCHTAB_SIZE 21
 
+#define CCTAB_SIZE 50 // Placeholder size
+#define EFFTAB_SIZE 50 // Placeholder size
+#define REGTAB_SIZE 50 // Placeholder size
+#define SPTAB_SIZE 50  // Placeholder size
+
 #endif /* ARRAY_SIZES_H */

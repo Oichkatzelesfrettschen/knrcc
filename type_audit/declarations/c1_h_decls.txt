@@ -1,0 +1,44 @@
+18:struct	tnode {
+22:	struct	tnode *tr1, *tr2;
+28:struct	tname {
+31:	char	class;
+32:	char	regno;
+40:struct	xtname {
+43:	char	class;
+44:	char	regno;
+46:	char	name[NCPS];
+49:struct	tconst {
+58:struct	lconst {
+64:struct	ftconst {
+74:struct	fasgn {
+78:	struct	tnode *tr1, *tr2;
+82:struct	optab {
+83:	char	tabdeg1;
+84:	char	tabtyp1;
+85:	char	tabdeg2;
+86:	char	tabtyp2;
+87:	char	*tabstring;
+90:struct	table {
+92:	struct	optab *tabp;
+95:struct	instab {
+97:	char	*str1;
+98:	char	*str2;
+101:struct	swtab {
+106:void strasg(struct fasgn *atp);
+107:void *getblk(int size);
+109:extern char	maprel[MAPREL_SIZE];
+110:extern char	notrel[NOTREL_SIZE];
+117:struct	table	cctab[];
+118:struct	table	efftab[];
+119:struct	table	regtab[];
+120:struct	table	sptab[];
+121:struct	table	lsptab[1];
+122:extern struct	instab	instab[INSTAB_SIZE];
+123:extern struct	instab	branchtab[BRANCHTAB_SIZE];
+125:extern char	*opntab[OPNTAB_SIZE];
+129:struct	tname	sfuncr;
+130:char	*funcbase;
+131:char	*curbase;
+132:char	*coremax;
+133:struct tconst czero, cone;
+134:struct	ftconst	fczero;

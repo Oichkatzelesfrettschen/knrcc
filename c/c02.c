@@ -34,11 +34,11 @@ void extdef(void)
 			goto syntax;
 	}
 	scflag = 0;
-	if (sclass_var==DEFXTRN) { // Use sclass_var
+	if (sclass==DEFXTRN) { // Use sclass
 		scflag++;
-		sclass_var = EXTERN; // Use sclass_var
+		sclass = EXTERN; // Use sclass
 	}
-	if (sclass_var!=EXTERN && sclass_var!=STATIC && sclass_var!=TYPEDEF) // Use sclass_var
+	if (sclass!=EXTERN && sclass!=STATIC && sclass!=TYPEDEF) // Use sclass
 		error("Illegal storage class");
 	do {
 		defsym = 0;
@@ -61,7 +61,7 @@ void extdef(void)
 				funcblk.type = decref(ds->htype);
 				funcblk.strp = ds->hstrp;
 				setinit(ds);
-				outcode("BS", SYMDEF, sclass_var==EXTERN?ds->name:"");
+				outcode("BS", SYMDEF, sclass==EXTERN?ds->name:"");
 				cfunc();
 				return;
 			}
@@ -70,7 +70,7 @@ void extdef(void)
 		} else if ((o=symbol())==COMMA || o==SEMI) {
 			peeksym = o;
 			o = (length((struct tnode *)ds)+ALIGN) & ~ALIGN;
-			if (sclass_var==STATIC) {
+			if (sclass==STATIC) {
 				setinit(ds);
 				outcode("BSBBSBN", SYMDEF, "", BSS, NLABEL, ds->name, SSPACE, o);
 			} else if (scflag)
@@ -79,11 +79,11 @@ void extdef(void)
 			if (o!=ASSIGN)
 				peeksym = o;
 			setinit(ds);
-			if (sclass_var==EXTERN)
+			if (sclass==EXTERN)
 				outcode("BS", SYMDEF, ds->name);
 			outcode("BBS", DATA, NLABEL, ds->name);
 			cb = funcbase;
-			if (cinit(ds, 1, sclass_var) & ALIGN)
+			if (cinit(ds, 1, sclass) & ALIGN)
 				outcode("B", EVEN);
 			if (maxdecl > cb)
 				cb = maxdecl;
@@ -154,7 +154,7 @@ int cinit(struct hshtab *anp, int flex, int sclass)
 	cb = funcbase;
 	np = (struct phshtab *)gblock(sizeof(*np));
 	funcbase = curbase;
-	cpysymb(np, anp);
+	cpysymb(np, (struct phshtab *)anp);
 	realtype = np->htype;
 	isarray = 0;
 	if ((realtype&XTYPE) == ARRAY)
@@ -182,7 +182,7 @@ int cinit(struct hshtab *anp, int flex, int sclass)
 		width = o;
 	}
 	brace = 0;
-	if ((peeksym=symbol())==LBRACE && (isarray || np->type!=STRUCT)) {
+	if ((peeksym=symbol())==LBRACE && (isarray || np->htype!=STRUCT)) { // Changed np->type to np->htype
 		peeksym = -1;
 		brace++;
 	}
@@ -467,7 +467,7 @@ stmt:
 			brklab = isn++;
 			np = pexpr();
 			chkw(np, -1);
-			rcexpr(block(RFORCE,0,NULL,NULL,np));
+			rcexpr(block(RFORCE,0,NULL,NULL,np, NULL)); // Added NULL for p2
 			pswitch();
 			brklab = o1;
 			return;
@@ -508,7 +508,7 @@ stmt:
 			struct hshtab *o1_hs = csym;
 			if (o1_hs->hclass>0) {
 				if (o1_hs->hblklev==0) {
-					pushdecl(o1_hs);
+					pushdecl((struct phshtab *)o1_hs);
 					o1_hs->hoffset = 0;
 				} else {
 					defsym = o1_hs;
@@ -543,7 +543,7 @@ static int forstmt(void)
 {
 	register int l, o, sline;
 	int sline1;
-    char **ss_ptr; // K&R ss was int*, used with funcbase (char*) then assigned to curbase/funcbase (char*)
+    // char **ss_ptr; // K&R ss was int*, used with funcbase (char*) then assigned to curbase/funcbase (char*)
                   // This is tricky. Assuming it's a pointer to a char* or similar.
                   // For now, let's use char** to reflect it's a pointer to a base pointer.
                   // This requires careful review of its usage.
@@ -683,7 +683,7 @@ void funchead(void)
 			cs->htype -= (ARRAY-PTR);
 			cs->hsubsp++;
 		}
-		pl += rlength(cs);
+		pl += rlength((struct tnode *)cs);
 		if (cs->hclass==AREG && (hreg.hoffset=goodreg(cs))>=0) {
 			bstack[0] = &areg;
 			bstack[1] = nblock(cs);
@@ -745,7 +745,7 @@ void blkend(void)
 				hshused--;
 				cs->hflag &= ~FKEYW;
 			} else {
-				cpysymb((struct phshtab *)cs, ncs);
+				cpysymb((struct phshtab *)cs, (struct phshtab *)ncs);
 			}
 			continue;
 		}
@@ -760,10 +760,55 @@ void blkend(void)
 			cs->name[0] = '\0';
 			hshused--;
 			i = ncs->hflag;
-			cpysymb((struct phshtab *)ncs, cs);
+			cpysymb((struct phshtab *)ncs, (struct phshtab *)cs);
 			ncs->hflag |= (i&FKEYW);
 			cs->hflag &= ~FKEYW;
 		}
+		// The following cpysymb call was not in the original diff snippet, but it's in blkend too.
+		// Assuming it's similar: cpysymb((struct phshtab *)ncs, (struct phshtab *)cs);
+		// However, the one above is ncs = (struct hshtab*)cs->hpdown. If ncs is phshtab*, then only cs needs cast.
+		// The one below is ncs=csym (hshtab*), cs is hshtab*. Both need cast.
+		// For now, I will only change the one explicitly mentioned if the context is specific.
+		// The grep output showed two calls in blkend needing the second arg cast.
+		// The first one is: cpysymb((struct phshtab *)cs, ncs); where ncs = (struct hshtab*) cs->hpdown;
+		// So ncs is struct phshtab * if cs->hpdown is. cs->hpdown *is* struct phshtab*. So this one is fine.
+		// It's the *other* call: cpysymb((struct phshtab *)ncs, cs); where ncs is csym (hshtab*).
+		// This is confusing. Let me re-check the error log for which calls are problematic.
+		// Log: c/c02.c:748:63: warning: passing argument 2 of ‘cpysymb’ from incompatible pointer type
+		//      cpysymb((struct phshtab *)cs, ncs); -> ncs is cs->hpdown (phshtab*), so this is fine. NO, ncs is hshtab* in this context from prior loop.
+		// The loop is: for (cs=hshtab; ... ; ++cs) { ... if ((ncs = (struct hshtab *)cs->hpdown)==NULL) ... else { cpysymb((struct phshtab *)cs, ncs); } ... }
+		// Here cs is hshtab*, cs->hpdown is phshtab*. So ncs is phshtab*.
+		// cpysymb((struct phshtab *)cs, ncs) -> first arg is phshtab*, second is phshtab*. This should be FINE.
+
+		// Log: c/c02.c:763:56: warning: passing argument 2 of ‘cpysymb’ from incompatible pointer type
+		//      cpysymb((struct phshtab *)ncs, cs);
+		// Here, ncs = csym (which is hshtab*), and cs is hshtab*.
+		// So this should be: cpysymb((struct phshtab *)ncs, (struct phshtab *)cs);
+		// The diff context for the second one is harder to pinpoint without seeing the whole function.
+		// I will make one targeted change for the second call that is clearly problematic.
+		// The first call at 748 might be a misinterpretation of the log vs code structure by me.
+		// Let's assume the call at 763 is the one to fix for now.
+		// If cs->hpdown is phshtab*, then `ncs` in `cpysymb((struct phshtab *)cs, ncs)` is phshtab*.
+		// The definition of `struct hshtab` is `struct phshtab *hpdown;`. So `ncs` IS `phshtab*`.
+		// This means the warning for line 748 is: `cpysymb((struct phshtab *)cs, ncs);`
+		// `cs` is `hshtab*`. `ncs` is `phshtab*`.
+		// `cpysymb` expects `(phshtab*, phshtab*)`. So `(struct phshtab *)cs` is correct. The second arg `ncs` is already correct.
+		// This means the compiler warning might be slightly off or I am misinterpreting which argument it means by "argument 2".
+		// Let's assume "argument 2" means the second listed in the prototype (s2).
+		// If `cpysymb(s1, s2)` and s2 is the problem, then for `cpysymb((struct phshtab *)cs, ncs)`, `ncs` is the problem. But `ncs` is `phshtab*`.
+		// This is confusing. I will apply the casts as generally needed.
+
+		// Re-evaluating:
+		// 1. `cpysymb(np, anp);` where np is `phshtab*`, anp is `hshtab*`. Needs `(phshtab*)anp`.
+		// 2. `cpysymb((struct phshtab *)cs, ncs);` where cs is `hshtab*`, ncs is `cs->hpdown` (which is `phshtab*`). This call should be fine.
+		// 3. `cpysymb((struct phshtab *)ncs, cs);` where ncs is `csym` (an `hshtab*`), cs is `hshtab*`. Both need cast.
+		// So, the original plan for casts was mostly correct. The first diff handles the first case.
+		// The second and third are in `blkend`.
+
+		// The following change is for the call: `cpysymb((struct phshtab *)ncs, cs);`
+		// where ncs is csym (hshtab*) and cs is hshtab*
+		// This should become: cpysymb((struct phshtab *)ncs, (struct phshtab *)cs);
+		// This context is around line 763.
 		if (ncs->hblklev>1 || (ncs->hblklev>0 && ncs->hclass==EXTERN))
 			ncs->hblklev--;
 	} while ((cs = (cs<&hshtab[HSHSIZ-1])? ++cs: hshtab) != endcs);

@@ -11,14 +11,12 @@
 
 #include "c0.h"
 // Forward declarations for static functions in this file
-static int lookup(void);
+/* static int lookup(void); // Now extern via c0.h */
 static int findkw(void);
 // int symbol(void); // Global, declared in c0.h
 static int getnum(void);
 static int subseq(int c, int a, int b);
-#if 0 // Corresponding to excluded definition
-static void putstr(int lab, int amax);
-#endif
+/* static void putstr(int lab, int amax); // Now extern via c0.h, and definition below will be active */
 static int getcc(void);
 static int mapch(int ac);
 // char *copnum(int len); // Global, declared in c0.h
@@ -114,7 +112,7 @@ int main(int argc, char *argv[])
  * first.  An initial "." is ignored in the hash.
  * Return is a ptr to the symbol table entry.
  */
-static int lookup(void)
+int lookup(void) // No longer static
 {
 	int ihash;
 	register struct hshtab *rp;
@@ -480,8 +478,8 @@ static int subseq(int c, int a, int b)
  * or in the string temp file labelled by
  * lab.
  */
-#if 0 // Temporarily exclude putstr as its caller tree() is also excluded
-static void putstr(int lab, int amax)
+// #if 0 // Definition now active
+void putstr(int lab, int amax) // No longer static
 {
 	register int c, max;
 
@@ -508,7 +506,7 @@ static void putstr(int lab, int amax)
 	outcode("0");
 	strflg = 0;
 }
-#endif // End of exclusion for putstr
+// #endif
 
 /*
  * read a single-quoted character constant.
