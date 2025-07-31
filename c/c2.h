@@ -125,14 +125,58 @@ char	ccloc[20];
 #define	LABHS	127
 #define	OPHS	57
 
+#include <unistd.h> // For sbrk (if still used directly) and other POSIX functions
+#include <stdlib.h> // For exit, malloc, free (if alloc uses them)
+
 struct optab *ophash[OPHS];
-struct	node *nonlab();
-char	*copy();
-char	*sbrk();
-char	*findcon();
-struct	node *insertl();
-struct	node *codemove();
-char	*sbrk();
-char	*alloc();
+
+// Functions from c20.c
+int main(int argc, char *argv[]); // Standard main signature
+int input(void);
+int getline(void);
+int getnum(char *ap);
+void output(void);
+void reducelit(struct node *at);
+char *copy(int na, const char *s1, const char *s2); // Tentative: handles 1 or 2 strings based on na
+void opsetup(void);
+int oplook(void);
+void refcount(void);
+void iterate(void);
+void xjump(struct node *p1);
+struct node *insertl(struct node *oldp);
+struct node *codemove(struct node *p);
+void comjump(void);
+void backjmp(struct node *ap1, struct node *ap2);
+
+// Functions from c21.c (add all as extern for now, will be refined)
+void rmove(void);
+int jumpsw(void);
+void addsob(void);
+int toofar(struct node *p);
+int ilen(struct node *p);
+int adrlen(char *s);
+extern int kk_abs(int x); // Note: conflicts with stdlib.h abs, may need renaming or static.
+int equop(struct node *ap1, struct node *p2);
+void decref(struct node *p); // Note: name conflict with c04.c/c11.c decref
+struct node *nonlab(struct node *p);
+char *alloc(int n);
+void clearreg(void);
+void savereg(int ai, char *as);
+void dest(char *as, int flt);
+void singop(struct node *ap);
+void dualop(struct node *ap);
+int findrand(char *as, int flt);
+int isreg(char *as);
+void check(void); // Potentially for debugging
+int source(char *ap);
+void repladdr(struct node *p, int f, int flt);
+void movedat(void);
+void redunbr(struct node *p);
+char *findcon(int i);
+int compare(int oper, char *cp1, char *cp2);
+void setcon(char *ar1, char *ar2);
+int equstr(char *ap1, char *ap2);
+void setcc(char *ap);
+int natural(char *ap);
 
 #endif /* C2_H */

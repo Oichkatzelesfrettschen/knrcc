@@ -10,7 +10,7 @@
 
 #define	LTYPE	long	/* change to int for no long consts */
 #define	NCPS	8
-#define	NULL	0
+// #define	NULL	0 // System headers define NULL
 
 /*
  *  Tree node for unary and binary
@@ -104,7 +104,42 @@ struct	swtab {
 };
 
 void strasg(struct fasgn *atp);
+/*
+ * getblk: Allocates a block of memory from a bump-pointer arena.
+ * Assumes 'size' is appropriate for the alignment of the data type being stored.
+ * The arena is extended using sbrk() when needed.
+ * There is no corresponding free operation; memory is reclaimed on process exit.
+ */
 void *getblk(int size);
+extern struct tnode *isconstant(struct tnode *at); // From c12.c
+
+// Pass 1 Utility Functions (from c11.c primarily)
+extern int max(int a, int b);
+extern int degree(struct tnode *at);
+extern void pname(struct tnode *ap, int flag);
+extern int xdcalc(struct tnode *ap, int nrleft);
+extern int dcalc(struct tnode *ap, int nrleft);
+extern int notcompat(struct tnode *ap, int ast, int op);
+extern void prins(int op, int c, struct instab *itable);
+extern int collcon(struct tnode *ap);
+extern int isfloat(struct tnode *at);
+extern int oddreg(struct tnode *t, int areg);
+extern int arlength(int t);
+extern void pswitch(struct swtab *afp, struct swtab *alp, int deflab);
+extern int ispow2(struct tnode *atree);
+extern struct tnode *pow2(struct tnode *atree);
+extern void cbranch(struct tnode *atree, int albl, int cond, int areg);
+// static void branch(int lbl, int aop, int c); // c11.c version is static
+extern void longrel(struct tnode *atree, int lbl, int cond, int reg);
+extern int xlongrel(int f);
+// static void label(int l); // c11.c version is static
+extern void popstk(int a);
+extern void psoct(int an);
+extern void getree(void);
+extern int geti(void);
+extern char *outname(char *s);
+extern void setype(struct tnode *p, int t);
+// error, decref, incref are static in c11.c
 
 extern char	maprel[MAPREL_SIZE];
 extern char	notrel[NOTREL_SIZE];
@@ -114,10 +149,10 @@ int	isn;
 int	namsiz;
 int	line;
 int	nerror;
-struct	table	cctab[];
-struct	table	efftab[];
-struct	table	regtab[];
-struct	table	sptab[];
+extern struct	table	cctab[CCTAB_SIZE];
+extern struct	table	efftab[EFFTAB_SIZE];
+extern struct	table	regtab[REGTAB_SIZE];
+extern struct	table	sptab[SPTAB_SIZE];
 struct	table	lsptab[1];
 extern struct	instab	instab[INSTAB_SIZE];
 extern struct	instab	branchtab[BRANCHTAB_SIZE];

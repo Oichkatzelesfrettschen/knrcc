@@ -6,11 +6,24 @@
 
 #include "c1.h"
 
-optim(atree)
-struct tnode *atree;
+// Static forward declarations for c12.c (add if not present or append)
+static struct tnode *optim(struct tnode *atree);
+static struct tnode *unoptim(struct tnode *atree);
+static struct tnode *lvfield(struct tnode *at);
+static struct tnode *acommute(struct tnode *atree); // K&R: acommute(atree)
+static void distrib(struct acl *list);          // K&R: distrib(list) struct acl *list;
+static void squash(struct tnode **p, struct tnode **maxp); // K&R: squash(p, maxp) struct tnode **p, **maxp;
+static void const_func(int op, int *vp, int av);     // K&R: const(op, vp, av) int *vp; (renamed to avoid keyword conflict)
+static void insert(int op, struct tnode *atree, struct acl *alist); // K&R: insert(op, atree, alist) struct acl *alist;
+static int islong(int t);                       // K&R: islong(t)
+static struct tnode *isconstant(struct tnode *at); // K&R: isconstant(at) struct tnode *at;
+static struct tnode *hardlongs(struct tnode *at);  // K&R: hardlongs(at) struct tnode *at;
+// getblk, tnode, tconst, lconst are already handled (getblk is global, others static & ANSI)
+
+static struct tnode *optim(struct tnode *atree)
 {
-	struct { int intx[4]; };
-	register op, dope;
+	struct { int intx[4]; } /* unnamed_struct_var_optim */; // Give it a name or handle if used
+	register int op, dope; // Typed local register variables
 	int d1, d2;
 	struct tnode *t;
 	register struct tnode *tree;
@@ -234,7 +247,7 @@ struct tnode *atree;
 
 	constant:
 		if (tree->tr1->op==CON && tree->tr2->op==CON) {
-			const(op, &tree->tr1->value, tree->tr2->value);
+			const_func(op, &tree->tr1->value, tree->tr2->value);
 			return(tree->tr1);
 		}
 
@@ -265,13 +278,12 @@ struct tnode *atree;
 	return(tree);
 }
 
-unoptim(atree)
-struct tnode *atree;
+static struct tnode *unoptim(struct tnode *atree)
 {
-	struct { int intx[4]; };
+	struct { int intx[4]; } /* unnamed_struct_var_unoptim */; // Give it a name or handle if used
 	register struct tnode *subtre, *tree;
 	register int *p;
-	double static fv;
+	static double fv; // Static local, already typed
 	struct ftconst *fp;
 
 	if ((tree=atree)==0)
@@ -551,8 +563,7 @@ struct tnode *atree;
  * Pure assignment is handled specially.
  */
 
-lvfield(at)
-struct tnode *at;
+static struct tnode *lvfield(struct tnode *at)
 {
 	register struct tnode *t, *t1;
 	register struct fasgn *t2;
@@ -602,11 +613,11 @@ struct acl {
 	struct tnode *llist[LSTSIZ+1];
 };
 
-acommute(atree)
+static struct tnode *acommute(struct tnode *atree)
 {
 	struct acl acl;
 	int d, i, op, flt, d1;
-	register struct tnode *t1, **t2, *tree;
+	register struct tnode *t1, **t2, *tree; // Assuming t2 is meant to be tnode** based on *++t2
 	struct tnode *t;
 
 	acl.nextl = 0;
@@ -703,8 +714,7 @@ acommute(atree)
 	return(tree);
 }
 
-distrib(list)
-struct acl *list;
+static void distrib(struct acl *list)
 {
 /*
  * Find a list member of the form c1c2*x such
@@ -776,8 +786,7 @@ struct acl *list;
 	goto loop;
 }
 
-squash(p, maxp)
-struct tnode **p, **maxp;
+static void squash(struct tnode **p, struct tnode **maxp)
 {
 	register struct tnode **np;
 
@@ -785,11 +794,10 @@ struct tnode **p, **maxp;
 		*np = *(np+1);
 }
 
-const(op, vp, av)
-int *vp;
+static void const_func(int op, int *vp, int av) // New name and ANSI signature
 {
 	register int v;
-	struct { unsigned u;};
+	struct { unsigned u;} /* unnamed_struct_const */; // Comment for unnamed struct
 
 	v = av;
 	switch (op) {
@@ -937,10 +945,9 @@ register struct tnode *lp, *rp;
 	return(lp);
 }
 
-insert(op, atree, alist)
-struct acl *alist;
+static void insert(int op, struct tnode *atree, struct acl *alist)
 {
-	register d;
+	register int d;
 	register struct acl *list;
 	register struct tnode *tree;
 	int d1, i;
@@ -1015,6 +1022,28 @@ tconst(val, type)
 	return(p);
 }
 
+/*
+ * getblk - Arena Allocator
+ *
+ * Allocates 'size' bytes from a bump-pointer arena (`curbase` to `coremax`).
+ * Extends the arena by 1024 bytes using sbrk() if space runs out.
+ *
+ * Assumptions:
+ * 1. Alignment: The original `if (size&01) abort();` implies 'size' was expected
+ *    to be even (word-aligned on PDP-11). Modern sbrk typically returns memory
+ *    aligned for any fundamental type. Callers are responsible for ensuring 'size'
+ *    is adequate for the alignment requirements of the structures they allocate.
+ * 2. No Free: This is a simple bump allocator. Individual blocks cannot be freed.
+ *    Memory is only reclaimed when the process terminates.
+ * 3. Globals: Uses and modifies global `curbase` and `coremax`. `funcbase` is
+ *    likely the initial value of `curbase`.
+ *
+ * The function was modernized from K&R C:
+ * - Return type changed from implicit int (used as char*) to void*.
+ * - Internal pointer 'p' changed from 'register *p' to 'char *p'.
+ * - Compound assignment operators '=+' changed to '+='.
+ * - sbrk() error check updated for (char *)-1.
+ */
 void *getblk(int size)
 {
 	char *p; // Changed from 'register *p'
@@ -1032,15 +1061,14 @@ void *getblk(int size)
 	return(p); // p is char*, compatible with void* return
 }
 
-islong(t)
+static int islong(int t)
 {
 	if (t==LONG)
 		return(2);
 	return(1);
 }
 
-isconstant(at)
-struct tnode *at;
+static struct tnode *isconstant(struct tnode *at)
 {
 	register struct tnode *t;
 
@@ -1052,8 +1080,7 @@ struct tnode *at;
 	return(0);
 }
 
-hardlongs(at)
-struct tnode *at;
+static struct tnode *hardlongs(struct tnode *at)
 {
 	register struct tnode *t;
 

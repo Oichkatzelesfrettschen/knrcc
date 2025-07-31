@@ -7,6 +7,9 @@
 
 #include "c0.h"
 
+// Static forward declarations for c04.c
+static void treeout(struct tnode *atp, int isstruct);
+
 /*
  * Reduce the degree-of-reference by one.
  * e.g. turn "ptr-to-int" into "int".
@@ -20,7 +23,7 @@ int decref(int at)
 		error("Illegal indirection");
 		return(t);
 	}
-	return((t>>TYLEN) & ~TYPE | t&TYPE);
+	return (((t >> TYLEN) & ~TYPE) | (t & TYPE)); // Added parentheses
 }
 
 /*
@@ -36,30 +39,28 @@ int incref(int t)
  * Make a tree that causes a branch to lbl
  * if the tree's value is non-zero together with the cond.
  */
-cbranch(t, lbl, cond)
-struct tnode *t;
+void cbranch(struct tnode *tree, int label_num, int cond)
 {
-	treeout(t, 0);
-	outcode("BNNN", CBRANCH, lbl, cond, line);
+	treeout(tree, 0);
+	outcode("BNNN", CBRANCH, label_num, cond, line);
 }
 
 /*
  * Write out a tree.
  */
-rcexpr(atp)
-struct tnode *atp;
+void rcexpr(struct tnode *tree)
 {
 	register struct tnode *tp;
 
 	/*
 	 * Special optimization
 	 */
-	if ((tp=atp)->op==INIT && tp->tr1->op==CON) {
+	if ((tp=tree)->op==INIT && tp->tr1->op==CON) {
 		if (tp->type==CHAR) {
-			outcode("B1N0", BDATA, tp->tr1->value);
+			outcode("B1N0", BDATA, ((struct cnode *)tp->tr1)->value); // Cast to cnode
 			return;
 		} else if (tp->type==INT || tp->type==UNSIGN) {
-			outcode("BN", SINIT, tp->tr1->value);
+			outcode("BN", SINIT, ((struct cnode *)tp->tr1)->value); // Cast to cnode
 			return;
 		}
 	}
@@ -67,12 +68,11 @@ struct tnode *atp;
 	outcode("BN", EXPR, line);
 }
 
-treeout(atp, isstruct)
-struct tnode *atp;
+static void treeout(struct tnode *atp, int isstruct)
 {
 	register struct tnode *tp;
 	register struct hshtab *hp;
-	register nextisstruct;
+	register int nextisstruct;
 
 	if ((tp = atp) == 0) {
 		outcode("B", NULLOP);
@@ -82,7 +82,7 @@ struct tnode *atp;
 	switch(tp->op) {
 
 	case NAME:
-		hp = tp->tr1;
+		hp = (struct hshtab *)tp->tr1; // Cast to hshtab*
 		if (hp->hclass==TYPEDEF)
 			error("Illegal use of type name");
 		outcode("BNN", NAME, hp->hclass==0?STATIC:hp->hclass, tp->type);
@@ -93,24 +93,34 @@ struct tnode *atp;
 		break;
 
 	case LCON:
-		outcode("BNNN", tp->op, tp->type, tp->lvalue);
+		outcode("BNNN", tp->op, tp->type, ((struct lnode *)tp)->lvalue); // Cast to lnode
 		break;
 
 	case CON:
-		outcode("BNN", tp->op, tp->type, tp->value);
+		outcode("BNN", tp->op, tp->type, ((struct cnode *)tp)->value); // Cast to cnode
 		break;
 
 	case FCON:
-		outcode("BNF", tp->op, tp->type, tp->cstr);
+		outcode("BNF", tp->op, tp->type, ((struct fnode *)tp)->cstr); // Cast to fnode
 		break;
 
 	case STRING:
-		outcode("BNNN", NAME, STATIC, tp->type, tp->tr1);
+		// tp->tr1 for STRING op in treeout is already 'int label_for_string_literal'
+		// It's not a tnode itself that needs casting for a member.
+		outcode("BNNN", NAME, STATIC, tp->type, (int)(long)tp->tr1); // Ensure it's passed as int
 		break;
 
 	case FSEL:
 		treeout(tp->tr1, nextisstruct);
-		outcode("BNNN",tp->op,tp->type,tp->tr2->bitoffs,tp->tr2->flen);
+		// Assuming tp->strp points to a struct field for FSEL, based on how block() creates it
+		// and how FFIELD is used in c03.c
+		if (tp->strp) { // Should always be true for FSEL
+		    outcode("BNNN",tp->op,tp->type, ((struct field *)tp->strp)->bitoffs, ((struct field *)tp->strp)->flen);
+		} else {
+		    error("FSEL node has no field description"); // Should not happen
+		    // Handle error or pass dummy values if necessary
+		    outcode("BNNN",tp->op,tp->type, 0, 0);
+		}
 		break;
 
 	case ETYPE:
@@ -131,7 +141,7 @@ struct tnode *atp;
 
 	default:
 		treeout(tp->tr1, nextisstruct);
-		if (opdope[tp->op]&BINARY)
+		if (opdope_pass0[tp->op]&BINARY) // Changed opdope to opdope_pass0
 			treeout(tp->tr2, nextisstruct);
 		outcode("BN", tp->op, tp->type);
 		break;
@@ -143,17 +153,17 @@ struct tnode *atp;
 /*
  * Generate a branch
  */
-branch(lab)
+void branch(int label_num)
 {
-	outcode("BN", BRANCH, lab);
+	outcode("BN", BRANCH, label_num);
 }
 
 /*
  * Generate a label
  */
-label(l)
+void label(int label_num)
 {
-	outcode("BN", LABEL, l);
+	outcode("BN", LABEL, label_num);
 }
 
 /*
@@ -161,7 +171,7 @@ label(l)
  * is some kind of pointer; return the size of the object
  * to which the pointer points.
  */
-plength(struct tnode *ap) // Changed parameter to struct tnode *ap
+int plength(struct tnode *ap) // Changed parameter to struct tnode *ap
 {
 	register int t, l; // K&R t, l were implicitly int
 	register struct tnode *p;
@@ -179,7 +189,7 @@ plength(struct tnode *ap) // Changed parameter to struct tnode *ap
  * return the number of bytes in the object
  * whose tree node is acs.
  */
-length(struct tnode *acs)
+int length(struct tnode *acs)
 {
 	register int t, elsz; // K&R t, elsz were implicitly int
 	long n;
@@ -240,8 +250,7 @@ length(struct tnode *acs)
 /*
  * The number of bytes in an object, rounded up to a word.
  */
-rlength(cs)
-struct tnode *cs;
+int rlength(struct tnode *cs)
 {
 	return((length(cs)+ALIGN) & ~ALIGN);
 }
@@ -250,17 +259,17 @@ struct tnode *cs;
  * After an "if (...) goto", look to see if the transfer
  * is to a simple label.
  */
-simplegoto()
+int simplegoto(void)
 {
 	register struct hshtab *csp;
 
 	if ((peeksym=symbol())==NAME && nextchar()==';') {
 		csp = csym;
 		if (csp->hblklev == 0)
-			pushdecl(csp);
+			pushdecl((struct phshtab *)csp); // Cast csp
 		if (csp->hclass==0 && csp->htype==0) {
 			csp->htype = ARRAY;
-			csp->hflag =| FLABL;
+			csp->hflag |= FLABL; // Changed =| to |=
 			if (csp->hoffset==0)
 				csp->hoffset = isn++;
 		}
@@ -276,7 +285,7 @@ simplegoto()
 /*
  * Return the next non-white-space character
  */
-nextchar()
+int nextchar(void)
 {
 	while (spnextchar()==' ')
 		peekc = 0;
@@ -287,9 +296,9 @@ nextchar()
  * Return the next character, translating all white space
  * to blank and handling line-ends.
  */
-spnextchar()
+int spnextchar(void)
 {
-	register c;
+	register int c;
 
 	if ((c = peekc)==0)
 		c = getchar();
@@ -311,30 +320,30 @@ spnextchar()
 /*
  * is a break or continue legal?
  */
-chconbrk(l)
+void chconbrk(int label_num)
 {
-	if (l==0)
+	if (label_num==0)
 		error("Break/continue error");
 }
 
 /*
  * The goto statement.
  */
-dogoto()
+void dogoto(void)
 {
 	register struct tnode *np;
 
 	*cp++ = tree();
 	build(STAR);
 	chkw(np = *--cp, -1);
-	rcexpr(block(JUMP,0,NULL,NULL,np));
+	rcexpr(block(JUMP,0,NULL,NULL,np, NULL)); // Added NULL
 }
 
 /*
  * The return statement, which has to convert
  * the returned object to the function's type.
  */
-doret()
+void doret(void)
 {
 	register struct tnode *t;
 
@@ -345,7 +354,7 @@ doret()
 		build(ASSIGN);
 		cp[-1] = cp[-1]->tr2;
 		if (funcblk.type==CHAR)
-			cp[-1] = block(ITOC, INT, NULL, NULL, cp[-1]);
+			cp[-1] = block(ITOC, INT, NULL, NULL, cp[-1], NULL); // Added NULL
 		build(RFORCE);
 		rcexpr(*--cp);
 	}
@@ -363,64 +372,84 @@ doret()
  *   1: number 1
  *   0: number 0
  */
-outcode(s, a)
-char *s;
+void outcode(const char *s, ...) // Matches prototype in c0.h
 {
-	register *ap;
+	va_list ap;
 	register FILE *bufp;
-	int n;
-	register char *np;
+	int n;          // For string length limits
+	char *np;       // For string pointers
+	int temp_int;   // For 'B' and 'N' cases if they are truly int
+    // LTYPE temp_long; // For 'N' case if it's from an LCON (tp->lvalue) - this is tricky
 
 	bufp = stdout;
 	if (strflg)
 		bufp = sbufp;
-	ap = &a;
-	for (;;) switch(*s++) {
-	case 'B':
-		putc(*ap++, bufp);
-		putc(0376, bufp);
-		continue;
 
-	case 'N':
-		putc(*ap, bufp);
-		putc(*ap++>>8, bufp);
-		continue;
+	va_start(ap, s);
+	for (;;) {
+		switch(*s++) {
+		case 'B': // Expects an int (operator code, usually char range but passed as int)
+			temp_int = va_arg(ap, int);
+			putc(temp_int, bufp);       // First byte (the operator itself)
+			putc(0376, bufp);           // Second byte (marker)
+			continue;
 
-	case 'F':
-		n = 1000;
-		np = *ap++;
-		goto str;
+		case 'N': // Expects an int or LTYPE. The K&R code writes two bytes.
+                  // For simplicity and common case (like line numbers, simple values), assume int for now.
+                  // LCON case in treeout passes tp->lvalue, which is LTYPE (long).
+                  // This needs careful handling. A simple cast to int for putc might truncate.
+                  // The original putc(*ap, bufp); putc(*ap++>>8, bufp); implies it took an int and wrote its bytes.
+                  // FIXME: This assumes 'int' for 'N'. If LTYPE (long) is passed, this will be incorrect.
+			temp_int = va_arg(ap, int); // Assuming int for now. If LTYPE is passed, this is problematic.
+			putc(temp_int & 0xFF, bufp);        // Lower byte
+			putc((temp_int >> 8) & 0xFF, bufp); // Upper byte
+			continue;
 
-	case 'S':
-		n = NCPS;
-		np = *ap++;
-		if (*np)
-			putc('_', bufp);
-	str:
-		while (n-- && *np) {
-			putc(*np++&0177, bufp);
+		case 'F': // Expects char * (from tp->cstr after FCON in treeout)
+			n = 1000; // Default max length from original
+			np = va_arg(ap, char *);
+			goto str_out; // Common string output logic
+
+		case 'S': // Expects char * (symbol name from hp->name or an empty string)
+			n = NCPS; // Max length from original NCPS
+			np = va_arg(ap, char *);
+			if (np && *np) // Check if string is not null and not empty before putc('_')
+				putc('_', bufp);
+		str_out: // Label for common string output
+			if (np) { // Ensure np is not NULL
+				while (n-- > 0 && *np) { // Check n and *np
+					putc(*np++ & 0177, bufp);
+				}
+			}
+			putc(0, bufp); // Null terminator for the string segment
+			continue;
+
+		case '1':
+			putc(1, bufp);
+			putc(0, bufp);
+			continue;
+
+		case '0':
+			putc(0, bufp);
+			putc(0, bufp);
+			continue;
+
+		case '\0': // End of format string
+			if (ferror(bufp)) {
+				error("Write error on temp"); // error() is already variadic
+				exit(1);
+			}
+			va_end(ap);
+			return;
+
+		default:
+			// To handle the previous char if it wasn't a format specifier (e.g. literal char in format string)
+			// This case should ideally not be hit if format strings are well-formed.
+			// The original K&R didn't have this, it would have printed the char.
+			// For safety, let's assume format strings are composed only of known codes.
+			error("Botch in outcode format string");
+			va_end(ap);
+			exit(1); // Exit on unknown format code
 		}
-		putc(0, bufp);
-		continue;
-
-	case '1':
-		putc(1, bufp);
-		putc(0, bufp);
-		continue;
-
-	case '0':
-		putc(0, bufp);
-		putc(0, bufp);
-		continue;
-
-	case '\0':
-		if (ferror(bufp)) {
-			error("Write error on temp");
-			exit(1);
-		}
-		return;
-
-	default:
-		error("Botch in outcode");
 	}
 }

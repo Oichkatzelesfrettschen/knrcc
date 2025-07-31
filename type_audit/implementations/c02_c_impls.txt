@@ -1,0 +1,17 @@
+10:static int forstmt(void);
+11:static void prste(struct hshtab *acs);
+17:void extdef(void)
+109:void cfunc(void)
+146:int cinit(struct hshtab *anp, int flex, int sclass)
+252:void strinit(struct tnode *np, int sclass)
+293:void setinit(struct hshtab *anp)
+306:void statement(void)
+542:static int forstmt(void)
+601:pexpr(void)
+622:void pswitch(void)
+658:struct	tnode	areg	= { NAME, 0, NULL, NULL, (struct tnode *)&hreg, NULL}; // Added NULL for tr2
+659:void funchead(void)
+710:void blockhead(void)
+726:void blkend(void)
+777:static void prste(struct hshtab *acs)
+807:void errflush(int ao) // Made global (removed static)

@@ -63,11 +63,10 @@ char	revbr[] { JNE, JEQ, JGT, JLT, JGE, JLE, JHIS, JLOS, JHI, JLO };
 int	isn	= 20000;
 int	lastseg	= -1;
 
-main(argc, argv)
-char **argv;
+int main(int argc, char *argv[])
 {
 	register int niter, maxiter, isend;
-	extern end;
+	extern int end; // Modernized extern declaration
 	int nflag;
 
 	if (argc>1 && argv[1][0]=='+') {
@@ -139,7 +138,7 @@ char **argv;
 	exit(0);
 }
 
-input()
+int input(void)
 {
 	register struct node *p, *lastp;
 	register int oper;
@@ -200,10 +199,10 @@ input()
 	}
 }
 
-getline()
+int getline(void)
 {
 	register char *lp;
-	register c;
+	register int c;
 
 	lp = line;
 	while ((c = getchar())==' ' || c=='\t')
@@ -227,11 +226,10 @@ getline()
 	return(END);
 }
 
-getnum(ap)
-char *ap;
+int getnum(char *ap)
 {
 	register char *p;
-	register n, c;
+	register int n, c;
 
 	p = ap;
 	n = 0;
@@ -242,7 +240,7 @@ char *ap;
 	return(n);
 }
 
-output()
+void output(void)
 {
 	register struct node *t;
 	register struct optab *oper;
@@ -312,8 +310,7 @@ output()
  * and replace them with (pc),xx(r)
  *     -- Thanx and a tip of the Hatlo hat to Bliss-11.
  */
-reducelit(at)
-struct node *at;
+void reducelit(struct node *at)
 {
 	register char *c1, *c2;
 	char *c2s;
@@ -338,39 +335,48 @@ struct node *at;
 	nlit++;
 }
 
-char *
-copy(na, ap)
-char *ap;
+char *copy(int na, const char *s1, const char *s2_or_null)
 {
-	register char *p, *np;
-	char *onp;
-	register n;
+    register char *p_out;
+    const char *current_s_in; // Changed from 'np_in' to avoid confusion with output ptr
+    char *orig_p_out;
+    register int n_bytes_total = 0;
+    int len1 = 0, len2 = 0;
 
-	p = ap;
-	n = 0;
-	if (*p==0)
-		return(0);
-	do
-		n++;
-	while (*p++);
-	if (na>1) {
-		p = (&ap)[1];
-		while (*p++)
-			n++;
-	}
-	onp = np = alloc(n);
-	p = ap;
-	while (*np++ = *p++)
-		;
-	if (na>1) {
-		p = (&ap)[1];
-		np--;
-		while (*np++ = *p++);
-	}
-	return(onp);
+    if (!s1) return NULL; // Safety check
+
+    // Calculate length of s1
+    current_s_in = s1;
+    while (*current_s_in++)
+        len1++;
+    n_bytes_total = len1 + 1; // +1 for null terminator of s1
+
+    if (na > 1 && s2_or_null) {
+        current_s_in = s2_or_null;
+        while (*current_s_in++)
+            len2++;
+        n_bytes_total += len2; // s2 will be appended, overall one null term
+    }
+
+    orig_p_out = alloc(n_bytes_total);
+    if (!orig_p_out) return NULL; // alloc could fail
+
+    // Copy s1
+    p_out = orig_p_out;
+    current_s_in = s1;
+    while ((*p_out++ = *current_s_in++))
+        ;
+
+    if (na > 1 && s2_or_null) {
+        p_out--; // Back up to overwrite s1's null terminator
+        current_s_in = s2_or_null;
+        while ((*p_out++ = *current_s_in++))
+            ;
+    }
+    return orig_p_out;
 }
 
-opsetup()
+void opsetup(void)
 {
 	register struct optab *optp, **ophp;
 	register char *p;
@@ -384,7 +390,7 @@ opsetup()
 	}
 }
 
-oplook()
+int oplook(void)
 {
 	register struct optab *optp;
 	register char *lp, *np;
@@ -427,7 +433,7 @@ oplook()
 	return(0);
 }
 
-refcount()
+void refcount(void)
 {
 	register struct node *p, *lp;
 	static struct node *labhash[LABHS];
@@ -466,7 +472,7 @@ refcount()
 			decref(p);
 }
 
-iterate()
+void iterate(void)
 {
 	register struct node *p, *rp, *p1;
 
@@ -532,8 +538,7 @@ iterate()
 	}
 }
 
-xjump(p1)
-register struct node *p1;
+void xjump(struct node *p1)
 {
 	register struct node *p2, *p3;
 
@@ -555,9 +560,7 @@ register struct node *p1;
 	}
 }
 
-struct node *
-insertl(oldp)
-register struct node *oldp;
+struct node *insertl(struct node *oldp)
 {
 	register struct node *lp;
 
@@ -584,9 +587,7 @@ register struct node *oldp;
 	return(lp);
 }
 
-struct node *
-codemove(p)
-struct node *p;
+struct node *codemove(struct node *p)
 {
 	register struct node *p1, *p2, *p3;
 	struct node *t, *tl;
@@ -658,7 +659,7 @@ ivloop:
 	return(p3);
 }
 
-comjump()
+void comjump(void)
 {
 	register struct node *p1, *p2, *p3;
 
@@ -669,8 +670,7 @@ comjump()
 					backjmp(p1, p3);
 }
 
-backjmp(ap1, ap2)
-struct node *ap1, *ap2;
+void backjmp(struct node *ap1, struct node *ap2)
 {
 	register struct node *p1, *p2, *p3;
 

@@ -1,0 +1,19 @@
+47:char *copy(char *as);
+48:char *setsuf(char *as, int ch);
+49:void idexit(int sig);
+50:void dexit(void);
+51:void error(const char *s, const char *x);
+52:int getsuf(char as[]);
+53:int callsys(char f[], char *v[]);
+54:int nodup(char **l, char *os);
+55:void cunlink(char *f);
+58:int main(int argc, char *argv[])
+341:void idexit(int sig)
+348:void dexit(void)
+362:void error(const char *s, const char *x)
+373:int getsuf(char as[])
+393:setsuf(char *as, int ch)
+405:int callsys(char f[], char *v[])
+431:copy(char *as)
+450:int nodup(char **l, char *os)
+469:void cunlink(char *f)

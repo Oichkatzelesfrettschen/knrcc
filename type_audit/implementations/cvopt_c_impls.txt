@@ -1,0 +1,3 @@
+8:main(argc, argv)
+309:flag() {
+356:put(c)

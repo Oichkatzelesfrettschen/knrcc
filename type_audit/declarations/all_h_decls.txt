@@ -1,0 +1,197 @@
+22:#define	NCPS	8	/* # chars per symbol */
+27:#define	NMEMS	128	/* Number of members in a structure */
+29:#define	NBPC	8	/* bits per character, object machine */
+30:#define	NCPW	2	/* chars per word, object machine */
+31:#define	LNCPW	2	/* chars per word, compiler's machine */
+47: * format of a structure description
+49:struct str {
+50:	int	ssize;			/* structure size */
+51:	struct hshtab 	**memlist;	/* member list */
+57:struct field {
+65:struct tnode {
+68:	int	*subsp;		/* subscript list (for arrays) */
+69:	struct	str *strp;	/* structure description for structs */
+70:	struct	tnode *tr1;	/* left operand */
+71:	struct	tnode *tr2;	/* right operand */
+77:struct	cnode {
+81:	struct	str *strp;
+88:struct lnode {
+92:	struct	str *strp;
+100:struct	fnode {
+104:	struct	str *strp;
+105:	char	*cstr;
+112: * Pushed-down entry for block structure
+114:struct	phshtab {
+115:	char	hclass;
+116:	char	hflag;
+119:	struct	str *hstrp;
+121:	struct	phshtab *hpdown;
+122:	char	hblklev;
+128:struct hshtab {
+129:	char	hclass;		/* storage class */
+130:	char	hflag;		/* various flags */
+133:	struct	str *hstrp;	/* structure description */
+135:	struct	phshtab *hpdown;	/* Pushed-down name in outer block */
+136:	char	hblklev;	/* Block level of definition */
+137:	char	name[NCPS];	/* ASCII name */
+144:struct	tdim {
+152:struct swtab {
+157:char	cvtab[4][4];
+158:char	filename[64];
+160:extern char	ctab[CTAB_SIZE];
+161:char	symbuf[NCPS+2];
+163:struct	hshtab	hshtab[HSHSIZ];
+164:struct	tnode **cp;
+166:struct	swtab	swtab[SWSIZ];
+167:struct	swtab	*swp;
+178:char	*funcbase;
+179:char	*curbase;
+180:char	*coremax;
+181:char	*maxdecl;
+182:struct	hshtab	*defsym;
+183:struct	hshtab	*funcsym;
+185:struct	hshtab	*csym;
+190:struct	hshtab	**paraml;
+191:struct	hshtab	**parame;
+196:char	sbuf[BUFSIZ];
+200:struct	tnode	funcblk;
+201:extern char	cvntab[CVNTAB_SIZE];
+202:char	numbuf[64];
+203:struct	hshtab **memlist;
+205:struct	hshtab	structhole;
+325:#define	UNION	8		/* adjusted later to struct */
+373:  characters
+452:char	*sbrk(int incr); /* Common sbrk prototype, though actual might vary. Or remove if unistd.h is enough */
+453:struct	tnode *tree(void);
+454:char	*copnum(int len);
+455:struct	hshtab *xprtype(struct hshtab *atyb);
+456:int	symbol(void);
+459:extern void error(const char *s, ...); /* Variadic for safety */
+460:extern void extdef(void);
+461:extern void outcode(const char *s, ...); /* Variadic */
+462:extern int spnextchar(void);
+463:extern int nextchar(void);
+464:extern struct tnode *nblock(struct hshtab *ads); /* Corrected param name to ads */
+465:extern char *gblock(int n); /* Corrected param name to n */
+466:extern struct fnode *fblock(int t, char *string); /* Corrected param names */
+467:extern struct cnode *cblock(int v); /* Corrected param name to v */
+468:extern void build(int op);
+469:extern void errflush(int tok);
+470:extern int getkeywords(int *sclass, struct hshtab *type); /* Changed to int return */
+471:extern void decl1(int *sclass, struct hshtab *type, int offset, struct hshtab *tag);
+472:extern struct tnode *block(int op, int t, int *subs, struct str *str, struct tnode *p1, struct tnode *p2);
+475:extern int length(struct tnode *p);
+476:extern int decref(int t);
+477:extern int incref(int t);
+478:extern int plength(struct tnode *p); // Used by c01.c
+479:extern void setype(struct tnode *ap, int at, struct tnode *anewp);
+480:extern void chkw(struct tnode *p, int okt);
+481:extern int lintyp(int t);
+482:extern void chklval(struct tnode *ap);
+483:extern int fold(int op, struct tnode *ap1, struct tnode *ap2);
+484:extern int conexp(void);
+485:extern void extdef(void);
+486:extern void cfunc(void);
+487:extern int cinit(struct hshtab *anp, int flex, int sclass);
+488:extern void strinit(struct tnode *np, int sclass);
+489:extern void setinit(struct hshtab *anp);
+490:extern void statement(void);
+491:extern struct tnode *pexpr(void); // Ensure this is present and correct
+492:extern void pswitch(void);
+493:extern void funchead(void);
+494:extern void blockhead(void);
+495:extern void blkend(void);
+496:extern int declist(int sclass); /* Added for c02.c */
+497:extern void branch(int label_num); /* Added for c02.c */
+498:extern void label(int label_num); /* Added for c02.c */
+499:extern void cpysymb(struct phshtab *to, struct hshtab *from); /* Added for c02.c */
+500:extern void putstr(int lab, int amax); /* Added for c02.c - was static in c00! */
+501:extern void rcexpr(struct tnode *tree); /* Added for c02.c */
+502:extern int simplegoto(void); /* Added for c02.c */
+503:extern void dogoto(void); /* Added for c02.c */
+504:extern void doret(void); /* Added for c02.c */
+505:extern void cbranch(struct tnode *tree, int label_num, int cond); /* Added for c02.c */
+506:extern void chconbrk(int label_num); /* Added for c02.c */
+507:extern void pushdecl(struct hshtab *sym); /* Added for c02.c */
+508:extern void redec(void); /* Added for c02.c */
+509:extern int rlength(struct hshtab *sym); /* Added for c02.c */
+510:extern int goodreg(struct hshtab *sym); /* Added for c02.c */
+511:extern int lookup(void); /* Added for c02.c - was static in c00! */
+515:extern struct	tnode *convert(struct tnode *p, int t, int cvn, int len);
+516:extern struct	tnode *chkfun(struct tnode *ap);
+517:extern struct	tnode *disarray(struct tnode *ap);
+520:struct	tnode *pexpr();
+521:struct	str *strdec();
+18:struct	tnode {
+22:	struct	tnode *tr1, *tr2;
+28:struct	tname {
+31:	char	class;
+32:	char	regno;
+40:struct	xtname {
+43:	char	class;
+44:	char	regno;
+46:	char	name[NCPS];
+49:struct	tconst {
+58:struct	lconst {
+64:struct	ftconst {
+74:struct	fasgn {
+78:	struct	tnode *tr1, *tr2;
+82:struct	optab {
+83:	char	tabdeg1;
+84:	char	tabtyp1;
+85:	char	tabdeg2;
+86:	char	tabtyp2;
+87:	char	*tabstring;
+90:struct	table {
+92:	struct	optab *tabp;
+95:struct	instab {
+97:	char	*str1;
+98:	char	*str2;
+101:struct	swtab {
+106:void strasg(struct fasgn *atp);
+107:void *getblk(int size);
+109:extern char	maprel[MAPREL_SIZE];
+110:extern char	notrel[NOTREL_SIZE];
+117:struct	table	cctab[];
+118:struct	table	efftab[];
+119:struct	table	regtab[];
+120:struct	table	sptab[];
+121:struct	table	lsptab[1];
+122:extern struct	instab	instab[INSTAB_SIZE];
+123:extern struct	instab	branchtab[BRANCHTAB_SIZE];
+125:extern char	*opntab[OPNTAB_SIZE];
+129:struct	tname	sfuncr;
+130:char	*funcbase;
+131:char	*curbase;
+132:char	*coremax;
+133:struct tconst czero, cone;
+134:struct	ftconst	fczero;
+72:struct node {
+73:	char	op;
+74:	char	subop;
+75:	struct	node	*forw;
+76:	struct	node	*back;
+77:	struct	node	*ref;
+79:	char	*code;
+83:struct optab {
+84:	char	*opstring;
+88:char	line[LSIZE];
+89:struct	node	first;
+90:char	*curlp;
+112:char	*lasta;
+113:char	*lastr;
+114:char	*firstr;
+115:char	revbr[];
+116:char	regs[12][20];
+117:char	conloc[20];
+118:char	conval[20];
+119:char	ccloc[20];
+128:struct optab *ophash[OPHS];
+129:struct	node *nonlab();
+130:char	*copy();
+131:char	*sbrk();
+132:char	*findcon();
+133:struct	node *insertl();
+134:struct	node *codemove();
+135:char	*sbrk();
+136:char	*alloc();
