@@ -9,28 +9,49 @@
 #include "c1.h"
 #include "array_sizes.h"
 
+/* Make opdope refer to Pass 1's table */
+#define opdope opdope_pass1
+
+/* Forward declarations */
+struct tnode *sdelay(struct tnode **ap);
+struct tname *ncopy(struct tname *ap);
+struct tnode *optim(struct tnode *atree);
+struct tnode *tnode(int op, int type, ...);
+struct tnode *strfunc(struct tnode *atp);
+struct tnode *tconst(int val, int type);
+void doinit(int atype, struct tnode *atree);
+void movreg(int r0, int r1, struct tnode *tree);
+int comarg(struct tnode *atree, int *flagp);
+int cexpr(struct tnode *atree, struct table *atable, int areg);
+int delay(struct tnode **treep, struct table *table, int reg);
+int reorder(struct tnode **treep, struct table *table, int reg);
+int chkleaf(struct tnode *tree, struct table *table, int reg);
+void branch(int lbl, int cond);
+void label(int lbl);
+void cbranch(struct tnode *tree, int lbl, int cond);
+
 #define	dbprint(op)	/* */
 #ifdef	DEBUG
 #define	dbprint(op)	printf("	/ %s", opntab[op])
 #endif
 
-char	maprel[MAPREL_SIZE] {	EQUAL, NEQUAL, GREATEQ, GREAT, LESSEQ,
+char	maprel[MAPREL_SIZE] = {	EQUAL, NEQUAL, GREATEQ, GREAT, LESSEQ,
 			LESS, GREATQP, GREATP, LESSEQP, LESSP
 };
 
-char	notrel[NOTREL_SIZE] {	NEQUAL, EQUAL, GREAT, GREATEQ, LESS,
+char	notrel[NOTREL_SIZE] = {	NEQUAL, EQUAL, GREAT, GREATEQ, LESS,
 			LESSEQ, GREATP, GREATQP, LESSP, LESSEQP
 };
 
-struct tconst czero { CON, INT, 0};
-struct tconst cone  { CON, INT, 1};
+struct tconst czero = { CON, INT, 0};
+struct tconst cone  = { CON, INT, 1};
 
-struct tname sfuncr { NAME, STRUCT, STATIC, 0, 0, 0 };
+struct tname sfuncr = { NAME, STRUCT, STATIC, 0, 0, 0 };
 
 struct	table	*cregtab;
 
-int	nreg	3;
-int	isn	10000;
+int	nreg = 3;
+int	isn = 10000;
 
 int main(int argc, char *argv[])
 {
@@ -859,6 +880,7 @@ int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 				if (!ispow2(p->tr2))
 					break;
 				p->tr2 = pow2(p->tr2);
+				/* fall through */
 			case PLUS:
 			case MINUS:
 			case AND:
@@ -889,6 +911,7 @@ int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 		case ASTIMES:
 			if (!ispow2(p))
 				return(0);
+			/* fall through */
 		case ASPLUS:
 		case ASMINUS:
 		case ASAND:
@@ -954,7 +977,7 @@ struct tnode *sdelay(struct tnode **ap)
 		return(p);
 	}
 	if (p->op==STAR || p->op==PLUS)
-		if (p1=sdelay(&p->tr1))
+		if ((p1=sdelay(&p->tr1)))
 			return(p1);
 	if (p->op==PLUS)
 		return(sdelay(&p->tr2));
@@ -1013,13 +1036,13 @@ int chkleaf(struct tnode *atree, struct table *table, int reg)
 int comarg(struct tnode *atree, int *flagp)
 {
 	register struct tnode *tree;
-	register retval;
+	register int retval;
 	int i;
 	int size;
 
 	tree = atree;
 	if (tree->op==STRASG) {
-		size = tree->mask;
+		size = ((struct fasgn *)tree)->mask;
 		tree = tree->tr1;
 		tree = strfunc(tree);
 		if (size <= 2) {
@@ -1038,7 +1061,7 @@ int comarg(struct tnode *atree, int *flagp)
 		tree = tnode(PLUS, STRUCT+PTR, tree, tconst(size, INT));
 		tree = optim(tree);
 		retval = rcexpr(tree, regtab, 0);
-		size =>> 1;
+		size >>= 1;
 		if (size <= 5) {
 			for (i=0; i<size; i++)
 				printf("mov	-(r%d),-(sp)\n", retval);
@@ -1104,18 +1127,18 @@ void doinit(int atype, struct tnode *atree)
 			if (tree->tr1->op!=FCON && tree->tr1->op!=SFCON)
 				goto illinit;
 			tree = tree->tr1;
-			tree->value = tree->fvalue;
+			((struct ftconst *)tree)->value = ((struct ftconst *)tree)->fvalue;
 			tree->op = CON;
 		} else if (tree->op==LTOI) {
 			if (tree->tr1->op!=LCON)
 				goto illinit;
 			tree = tree->tr1;
-			lval = tree->lvalue;
+			lval = ((struct lconst *)tree)->lvalue;
 			tree->op = CON;
-			tree->value = lval;
+			((struct tconst *)tree)->value = lval;
 		}
 		if (tree->op == CON)
-			printf("%o\n", tree->value);
+			printf("%o\n", ((struct tconst *)tree)->value);
 		else if (tree->op==AMPER) {
 			pname(tree->tr1, 0);
 			putchar('\n');
@@ -1127,15 +1150,15 @@ void doinit(int atype, struct tnode *atree)
 	case FLOAT:
 		if (tree->op==ITOF) {
 			if (tree->tr1->op==CON) {
-				fval = tree->tr1->value;
+				fval = ((struct tconst *)tree->tr1)->value;
 			} else
 				goto illinit;
 		} else if (tree->op==FCON || tree->op==SFCON)
-			fval = tree->fvalue;
+			fval = ((struct ftconst *)tree)->fvalue;
 		else if (tree->op==LTOF) {
 			if (tree->tr1->op!=LCON)
 				goto illinit;
-			fval = tree->tr1->lvalue;
+			fval = ((struct lconst *)tree->tr1)->lvalue;
 		} else
 			goto illinit;
 		if (type==FLOAT) {
@@ -1157,13 +1180,13 @@ void doinit(int atype, struct tnode *atree)
 				tree->op = FCON;
 			if (tree->op!= FCON)
 				goto illinit;
-			lval = tree->fvalue;
+			lval = ((struct ftconst *)tree)->fvalue;
 		} else if (tree->op==ITOL) {
 			if (tree->tr1->op != CON)
 				goto illinit;
-			lval = tree->tr1->value;
+			lval = ((struct tconst *)tree->tr1)->value;
 		} else if (tree->op==LCON)
-			lval = tree->lvalue;
+			lval = ((struct lconst *)tree)->lvalue;
 		else
 			goto illinit;
 		// Print LSW then MSW for the long value

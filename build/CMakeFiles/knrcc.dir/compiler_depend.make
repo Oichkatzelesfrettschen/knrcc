@@ -391,6 +391,36 @@ CMakeFiles/knrcc.dir/c/c05.c.o: /home/runner/work/knrcc/knrcc/c/c05.c \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
 
+CMakeFiles/knrcc.dir/c/c10.c.o: /home/runner/work/knrcc/knrcc/c/c10.c \
+  /home/runner/work/knrcc/knrcc/c/array_sizes.h \
+  /home/runner/work/knrcc/knrcc/c/c1.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
+
 CMakeFiles/knrcc.dir/cc.c.o: /home/runner/work/knrcc/knrcc/cc.c \
   /usr/include/alloca.h \
   /usr/include/ctype.h \
@@ -490,8 +520,6 @@ CMakeFiles/knrcc.dir/cc.c.o: /home/runner/work/knrcc/knrcc/cc.c \
 
 /usr/include/x86_64-linux-gnu/sys/wait.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/stack_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
@@ -520,6 +548,10 @@ CMakeFiles/knrcc.dir/cc.c.o: /home/runner/work/knrcc/knrcc/cc.c \
 
 /usr/include/x86_64-linux-gnu/bits/sigcontext.h:
 
+/usr/include/x86_64-linux-gnu/bits/signum-arch.h:
+
+/usr/include/x86_64-linux-gnu/bits/fcntl.h:
+
 /usr/include/x86_64-linux-gnu/bits/time64.h:
 
 /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
@@ -537,10 +569,6 @@ CMakeFiles/knrcc.dir/cc.c.o: /home/runner/work/knrcc/knrcc/cc.c \
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 
 /usr/include/endian.h:
-
-/usr/include/x86_64-linux-gnu/bits/signum-arch.h:
-
-/usr/include/x86_64-linux-gnu/bits/fcntl.h:
 
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 
@@ -565,6 +593,10 @@ CMakeFiles/knrcc.dir/cc.c.o: /home/runner/work/knrcc/knrcc/cc.c \
 /home/runner/work/knrcc/knrcc/c/array_sizes.h:
 
 /usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
+
+/home/runner/work/knrcc/knrcc/c/c10.c:
 
 /usr/include/features.h:
 
@@ -684,9 +716,11 @@ CMakeFiles/knrcc.dir/cc.c.o: /home/runner/work/knrcc/knrcc/cc.c \
 
 /home/runner/work/knrcc/knrcc/c/c04.c:
 
-/usr/include/ctype.h:
+/home/runner/work/knrcc/knrcc/c/c1.h:
 
 /usr/include/signal.h:
+
+/usr/include/ctype.h:
 
 /usr/include/x86_64-linux-gnu/bits/ss_flags.h:
 

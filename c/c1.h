@@ -6,6 +6,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "array_sizes.h"
 
 #define	LTYPE	long	/* change to int for no long consts */
