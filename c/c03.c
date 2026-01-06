@@ -98,6 +98,7 @@ int getkeywords(int *sclass, struct hshtab *type) // Renamed params to sclass, t
 		case STRUCT:
 			type->hstrp = strdec(ismos, cval);
 			cval = STRUCT;
+			/* fall through */
 		case INT:
 		case CHAR:
 		case FLOAT:
@@ -351,13 +352,14 @@ static int static_decl1(int *sclass_ptr, struct hshtab *atptr, int offset, struc
 	}
 	if (!(dsym->hclass==0
 	   || ((skw==ARG||skw==AREG) && dsym->hclass==ARG1)
-	   || (skw==EXTERN && dsym->hclass==EXTERN && dsym->htype==type)))
-		if (skw==MOS && dsym->hclass==MOS && dsym->htype==type)
+	   || (skw==EXTERN && dsym->hclass==EXTERN && dsym->htype==type))) {
+		if (skw==MOS && dsym->hclass==MOS && dsym->htype==type) {
 			chkoff = 1;
-		else {
+		} else {
 			redec();
 			goto syntax;
 		}
+	}
 	if (dsym->hclass && (dsym->htype&TYPE)==STRUCT && (type&TYPE)==STRUCT)
 		if (dsym->hstrp != tptr->hstrp) {
 			error("Warning: structure redeclaration");
@@ -543,6 +545,7 @@ static int getype(struct tdim *adimp, struct hshtab *absname)
 				goto syntax;
 			goto getf;
 		}
+		/* fall through */
 
 	default:
 		peeksym = o;

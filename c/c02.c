@@ -341,7 +341,7 @@ stmt:
 		switch(cval) {
 
 		case GOTO:
-			if (o1 = simplegoto())
+			if ((o1 = simplegoto()))
 				branch(o1);
 			else 
 				dogoto();
@@ -356,7 +356,7 @@ stmt:
 			o2 = 0;
 			if ((o1=symbol())==KEYW) switch (cval) {
 			case GOTO:
-				if (o2=simplegoto())
+				if ((o2=simplegoto()))
 					goto simpif;
 				cbranch(np, o2=isn++, 0);
 				dogoto();
@@ -487,7 +487,7 @@ stmt:
 			o2 = brklab;
 			contlab = isn++;
 			brklab = isn++;
-			if (o=forstmt())
+			if ((o=forstmt()))
 				goto syntax;
 			label(brklab);
 			contlab = o1;
@@ -811,7 +811,12 @@ void blkend(void)
 		// This context is around line 763.
 		if (ncs->hblklev>1 || (ncs->hblklev>0 && ncs->hclass==EXTERN))
 			ncs->hblklev--;
-	} while ((cs = (cs<&hshtab[HSHSIZ-1])? ++cs: hshtab) != endcs);
+		/* Advance cs with proper sequence */
+		if (cs < &hshtab[HSHSIZ-1])
+			cs++;
+		else
+			cs = hshtab;
+	} while (cs != endcs);
 }
 
 /*

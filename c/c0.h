@@ -154,7 +154,7 @@ struct swtab {
 	int	swval;
 };
 
-char	cvtab[4][4];
+unsigned char	cvtab[4][4];
 char	filename[64];
 extern int	opdope_pass0[OPDOPE_PASS0_SIZE];
 extern char	ctab[CTAB_SIZE];
@@ -449,7 +449,7 @@ int	mossym;
 /*
  * functions
  */
-char	*sbrk(int incr); /* Common sbrk prototype, though actual might vary. Or remove if unistd.h is enough */
+/* sbrk is provided by unistd.h */
 struct	tnode *tree(void);
 char	*copnum(int len);
 struct	hshtab *xprtype(struct hshtab *atyb);
