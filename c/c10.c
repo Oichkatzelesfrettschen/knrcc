@@ -13,6 +13,7 @@
 #define opdope opdope_pass1
 
 /* Forward declarations */
+struct optab *match(struct tnode *atree, struct table *table, int nrleft, int nocvt);
 struct tnode *sdelay(struct tnode **ap);
 struct tname *ncopy(struct tname *ap);
 struct tnode *optim(struct tnode *atree);
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
  * required is not too large.
  * Return a ptr to the table entry or 0 if none found.
  */
-char *
+struct optab *
 match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
 {
 #define	NOCVL	1
@@ -137,20 +138,20 @@ match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
 		if (opdope[p2->op]&CNVRT && (nocvt&NOCVR)==0
 			 && (opdope[p2->tr1->op]&CNVRT)==0) {
 			tree->tr2 = p2->tr1;
-			if (opt = match(tree, table, nrleft, NOCVL))
+			if ((opt = match(tree, table, nrleft, NOCVL)))
 				return(opt);
 			tree->tr2 = p2;
 		} else if (opdope[p1->op]&CNVRT && (nocvt&NOCVL)==0
 		 && (opdope[p1->tr1->op]&CNVRT)==0) {
 			tree->tr1 = p1->tr1;
-			if (opt = match(tree, table, nrleft, NOCVR))
+			if ((opt = match(tree, table, nrleft, NOCVR)))
 				return(opt);
 			tree->tr1 = p1;
 		}
 		d2 = dcalc(p2, nrleft);
 	}
-	for (; table->op!=op; table++)
-		if (table->op==0)
+	for (; table->tabop!=op; table++)
+		if (table->tabop==0)
 			return(0);
 	for (opt = table->tabp; opt->tabdeg1!=0; opt++) {
 		if (d1 > (opt->tabdeg1&077)
@@ -194,7 +195,7 @@ match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
  */
 int rcexpr(struct tnode *atree, struct table *atable, int reg)
 {
-	register r;
+	register int r;
 	int modf, nargs, recurf;
 	register struct tnode *tree;
 	register struct table *table;
@@ -212,7 +213,7 @@ int rcexpr(struct tnode *atree, struct table *atable, int reg)
 again:
 	if((tree=atree)==0)
 		return(0);
-	if (opdope[tree->op]&RELAT && tree->tr2->op==CON && tree->tr2->value==0
+	if (opdope[tree->op]&RELAT && tree->tr2->op==CON && ((struct tconst *)tree->tr2)->value==0
 	 && table==cctab)
 		tree = atree = tree->tr1;
 	/*
@@ -290,7 +291,7 @@ again:
 		r = 0;
 		nargs = 0;
 		modf = 0;
-		if (tree->tr1->op!=NAME || tree->tr1->class!=EXTERN) {
+		if (tree->tr1->op!=NAME || ((struct tname *)tree->tr1)->class!=EXTERN) {
 			nargs++;
 			nstack++;
 		}
@@ -306,7 +307,7 @@ again:
 		}
 		tree = atree;
 		tree->op = CALL2;
-		if (modf && tree->tr1->op==NAME && tree->tr1->class==EXTERN)
+		if (modf && tree->tr1->op==NAME && ((struct tname *)tree->tr1)->class==EXTERN)
 			tree->op = CALL1;
 		if (cexpr(tree, regtab, reg)<0)
 			error("compiler botch: call");
@@ -347,7 +348,7 @@ again:
 	 */
 	if (table!=cctab && table!=cregtab && recurf<2
 	 && (opdope[tree->op]&LEAF)==0) {
-		if (r=delay(&atree, table, reg)) {
+		if ((r=delay(&atree, table, reg))) {
 			tree = atree;
 			table = efftab;
 			reg = r-1;
@@ -421,7 +422,7 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	struct tnode *p2;
 	char *string;
 	int reg, reg1, rreg, flag, opd;
-	char *opt;
+	struct optab *opt;
 
 	tree = atree;
 	reg = areg;
@@ -434,10 +435,10 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	 */
 	if ((opd&RELAT||c==LOGAND||c==LOGOR||c==EXCLA) && table!=cctab) {
 		cbranch(tree, c=isn++, 1, reg);
-		rcexpr(&czero, table, reg);
+		rcexpr((struct tnode *)&czero, table, reg);
 		branch(isn, 0);
 		label(c);
-		rcexpr(&cone, table, reg);
+		rcexpr((struct tnode *)&cone, table, reg);
 		label(isn++);
 		return(reg);
 	}
@@ -461,7 +462,7 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	/*
 	 * long values take 2 registers.
 	 */
-	if ((tree->type==LONG||opd&RELAT&&tree->tr1->type==LONG) && tree->op!=ITOL)
+	if ((tree->type==LONG||(opd&RELAT&&tree->tr1->type==LONG)) && tree->op!=ITOL)
 		reg1++;
 	/*
 	 * Leaves of the expression tree
@@ -473,8 +474,8 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	 */
 
 	if ((tree->op==PLUS||tree->op==ASPLUS) &&
-	    (p1=tree->tr2)->op == CON && p1->value == -1) {
-		p1->value = 1;
+	    (p1=tree->tr2)->op == CON && ((struct tconst *)p1)->value == -1) {
+		((struct tconst *)p1)->value = 1;
 		tree->op =+ (MINUS-PLUS);
 	}
 	/*
