@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/knrcc.dir/link.d"
   "CMakeFiles/knrcc.dir/c/c00.c.o"
   "CMakeFiles/knrcc.dir/c/c00.c.o.d"
   "CMakeFiles/knrcc.dir/c/c01.c.o"

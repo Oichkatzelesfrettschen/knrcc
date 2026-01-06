@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wextra -Wpedantic -Werror CMakeFiles/cvopt.dir/c/cvopt.c.o -o cvopt
+/usr/bin/cc  -Wall -Wextra -Wpedantic -Werror -Wl,--dependency-file=CMakeFiles/cvopt.dir/link.d CMakeFiles/cvopt.dir/c/cvopt.c.o -o cvopt
