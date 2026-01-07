@@ -128,7 +128,7 @@ loop:
                 case SOFFS:
                 case XOFFS:
                     pbase(p);
-                    // Fallthrough was intended here in K&R C
+                    /* fall through */
                 case OFFS:
                     printf("(r%d)", name_node->regno);
                     return;
@@ -228,7 +228,7 @@ int dcalc(struct tnode *ap, int nrleft) // Removed static
 	case NAME: // p is effectively struct tname*
 		if (((struct tname *)p)->class==REG)
 			return(9);
-        // Fallthrough if not REG, default handling at end of switch
+		/* fall through */
 
 	case AMPER:
 	case FCON:  // No specific members accessed here for dcalc, just op type
@@ -323,24 +323,24 @@ int collcon(struct tnode *ap) // Removed static
 }
 int isfloat(struct tnode *at) { (void)at; /* ... */ return 0;} // Removed static
 int oddreg(struct tnode *t, int areg) { (void)t; (void)areg; /* ... */ return 0;} // Removed static
-int arlength(int t) { /* ... */ return 0;} // Removed static
-void pswitch(struct swtab *afp, struct swtab *alp, int deflab) { /* ... */ } // Removed static
-static void breq(int v, int l) { /* ... */ }
-static int sort(struct swtab *afp, struct swtab *alp) { /* ... */ return 0;}
+int arlength(int t) { (void)t; /* ... */ return 0;} // Removed static
+void pswitch(struct swtab *afp, struct swtab *alp, int deflab) { (void)afp; (void)alp; (void)deflab; /* ... */ } // Removed static
+__attribute__((unused)) static void breq(int v, int l) { (void)v; (void)l; /* ... */ }
+__attribute__((unused)) static int sort(struct swtab *afp, struct swtab *alp) { (void)afp; (void)alp; /* ... */ return 0;}
 int ispow2(struct tnode *atree) { (void)atree; /* ... */ return 0;} // Removed static
 struct tnode *pow2(struct tnode *atree) { /* ... */ return atree;} // Removed static
-void cbranch(struct tnode *atree, int albl, int cond, int areg) { /* ... */ } // Removed static
-static void branch(int lbl, int aop, int c) { /* ... */ }
-void longrel(struct tnode *atree, int lbl, int cond, int reg) { /* ... */ } // Removed static
+void cbranch(struct tnode *atree, int albl, int cond, int areg) { (void)atree; (void)albl; (void)cond; (void)areg; /* ... */ } // Removed static
+__attribute__((unused)) static void branch(int lbl, int aop, int c) { (void)lbl; (void)aop; (void)c; /* ... */ }
+void longrel(struct tnode *atree, int lbl, int cond, int reg) { (void)atree; (void)lbl; (void)cond; (void)reg; /* ... */ } // Removed static
 int xlongrel(int f) { (void)f; /* ... */ return 0;} // Removed static
-static void label(int l) { /* ... */ }
-void popstk(int a) { /* ... */ } // Removed static
+__attribute__((unused)) static void label(int l) { (void)l; /* ... */ }
+void popstk(int a) { (void)a; /* ... */ } // Removed static
 static void error(const char *s, ...) { va_list args; nerror++; fprintf(stderr, "%d: ", line); va_start(args, s); vfprintf(stderr, s, args); va_end(args); putc('\n', stderr); }
-void psoct(int an) { /* ... */ } // Removed static
+void psoct(int an) { (void)an; /* ... */ } // Removed static
 void getree(void) { /* ... many casts needed here ... */ } // Removed static
 int geti(void) { register int i; i = getchar(); i += getchar()<<8; return(i); } // Removed static
 char *outname(char *s) { register char *p; register int c; register int n; p = s; n = 0; while ((c = getchar())) {*p++ = c; n++;} do {*p++ = 0;} while (n++ < 8); return(s);} // Removed static
-void strasg(struct fasgn *atp) { /* ... many casts needed ... */ }
+void strasg(struct fasgn *atp) { (void)atp; /* ... many casts needed ... */ }
 // static int decref(int at) { register int t; t = at; if ((t & ~TYPE) == 0) { error("Illegal indirection"); return(t); } return((t>>TYLEN) & ~TYPE | t&TYPE); }
 // static int incref(int t) { return(((t&~TYPE)<<TYLEN) | (t&TYPE) | PTR); }
 // Re-defining local decref and incref as they were in original c11.c
