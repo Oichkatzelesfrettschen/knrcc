@@ -36,7 +36,7 @@ struct tnode *lconst(int op, struct tnode *lp, struct tnode *rp);  // Forward de
 
 static struct tnode *optim(struct tnode *atree)
 {
-	union { int intx[4]; double d; } fval_union; // For FCON conversion
+	union { unsigned short s[4]; double d; } fval_union; // For FCON conversion
 	register int op, dope; // Typed local register variables
 	int d1, d2;
 	struct tnode *t;
@@ -56,11 +56,11 @@ static struct tnode *optim(struct tnode *atree)
 		if (op==FCON) {
 			/* Convert FCON to SFCON if possible */
 			fval_union.d = ((struct ftconst *)tree)->fvalue;
-			if (fval_union.intx[1]==0
-			 && fval_union.intx[2]==0
-			 && fval_union.intx[3]==0) {
+			if (fval_union.s[1]==0
+			 && fval_union.s[2]==0
+			 && fval_union.s[3]==0) {
 				tree->op = SFCON;
-				((struct ftconst *)tree)->value = fval_union.intx[0];
+				((struct ftconst *)tree)->value = fval_union.s[0];
 			}
 		}
 		return(tree);
@@ -297,7 +297,6 @@ static struct tnode *optim(struct tnode *atree)
 
 static struct tnode *unoptim(struct tnode *atree)
 {
-	struct { int intx[4]; } /* unnamed_struct_var_unoptim */; // Give it a name or handle if used
 	register struct tnode *subtre, *tree;
 	register int *p;
 	static double fv; // Static local, already typed
@@ -556,12 +555,18 @@ static struct tnode *unoptim(struct tnode *atree)
 		 * PDP-11 FP negation
 		 */
 		if (subtre->op==SFCON) {
+			union { unsigned short s[4]; double d; } neg_union;
 			subtre->value =^ 0100000;
-			subtre->fvalue.intx[0] =^ 0100000;
+			neg_union.d = ((struct ftconst *)subtre)->fvalue;
+			neg_union.s[0] =^ 0100000;
+			((struct ftconst *)subtre)->fvalue = neg_union.d;
 			return(subtre);
 		}
 		if (subtre->op==FCON) {
-			subtre->fvalue.intx[0] =^ 0100000;
+			union { unsigned short s[4]; double d; } neg_union;
+			neg_union.d = ((struct ftconst *)subtre)->fvalue;
+			neg_union.s[0] =^ 0100000;
+			((struct ftconst *)subtre)->fvalue = neg_union.d;
 			return(subtre);
 		}
 	}
