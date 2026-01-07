@@ -1,4 +1,4 @@
-/app/build/CMakeFiles/knrcc.dir
-/app/build/CMakeFiles/cvopt.dir
-/app/build/CMakeFiles/edit_cache.dir
-/app/build/CMakeFiles/rebuild_cache.dir
+/home/runner/work/knrcc/knrcc/build/CMakeFiles/knrcc.dir
+/home/runner/work/knrcc/knrcc/build/CMakeFiles/cvopt.dir
+/home/runner/work/knrcc/knrcc/build/CMakeFiles/edit_cache.dir
+/home/runner/work/knrcc/knrcc/build/CMakeFiles/rebuild_cache.dir

@@ -8,7 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/app/c/cvopt.c" "CMakeFiles/cvopt.dir/c/cvopt.c.o" "gcc" "CMakeFiles/cvopt.dir/c/cvopt.c.o.d"
+  "/home/runner/work/knrcc/knrcc/c/cvopt.c" "CMakeFiles/cvopt.dir/c/cvopt.c.o" "gcc" "CMakeFiles/cvopt.dir/c/cvopt.c.o.d"
+  "" "cvopt" "gcc" "CMakeFiles/cvopt.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

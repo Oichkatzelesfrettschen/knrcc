@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/cvopt.dir/link.d"
   "CMakeFiles/cvopt.dir/c/cvopt.c.o"
   "CMakeFiles/cvopt.dir/c/cvopt.c.o.d"
   "cvopt"

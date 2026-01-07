@@ -4,3 +4,11 @@ c/cvopt
 **/*~
 knrcc.sh
 sync.sh
+build/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+knrcc
+cvopt

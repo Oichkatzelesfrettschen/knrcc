@@ -9,28 +9,52 @@
 #include "c1.h"
 #include "array_sizes.h"
 
+/* Make opdope refer to Pass 1's table */
+#define opdope opdope_pass1
+
+/* Forward declarations */
+struct optab *match(struct tnode *atree, struct table *table, int nrleft, int nocvt);
+struct tnode *sdelay(struct tnode **ap);
+struct tname *ncopy(struct tname *ap);
+struct tnode *optim(struct tnode *atree);
+struct tnode *tnode(int op, int type, ...);
+struct tnode *strfunc(struct tnode *atp);
+struct tnode *tconst(int val, int type);
+void doinit(int atype, struct tnode *atree);
+void movreg(int r0, int r1, struct tnode *tree);
+int comarg(struct tnode *atree, int *flagp);
+int cexpr(struct tnode *atree, struct table *atable, int areg);
+int delay(struct tnode **treep, struct table *table, int reg);
+int reorder(struct tnode **treep, struct table *table, int reg);
+int chkleaf(struct tnode *tree, struct table *table, int reg);
+int sreorder(struct tnode **treep, struct table *table, int reg, int recurf);
+void branch(int lbl, int cond);
+void label(int lbl);
+void cbranch(struct tnode *tree, int lbl, int cond, int reg);
+void error(const char *s, ...);
+
 #define	dbprint(op)	/* */
 #ifdef	DEBUG
 #define	dbprint(op)	printf("	/ %s", opntab[op])
 #endif
 
-char	maprel[MAPREL_SIZE] {	EQUAL, NEQUAL, GREATEQ, GREAT, LESSEQ,
+char	maprel[MAPREL_SIZE] = {	EQUAL, NEQUAL, GREATEQ, GREAT, LESSEQ,
 			LESS, GREATQP, GREATP, LESSEQP, LESSP
 };
 
-char	notrel[NOTREL_SIZE] {	NEQUAL, EQUAL, GREAT, GREATEQ, LESS,
+char	notrel[NOTREL_SIZE] = {	NEQUAL, EQUAL, GREAT, GREATEQ, LESS,
 			LESSEQ, GREATP, GREATQP, LESSP, LESSEQP
 };
 
-struct tconst czero { CON, INT, 0};
-struct tconst cone  { CON, INT, 1};
+struct tconst czero = { CON, INT, 0};
+struct tconst cone  = { CON, INT, 1};
 
-struct tname sfuncr { NAME, STRUCT, STATIC, 0, 0, 0 };
+struct tname sfuncr = { NAME, STRUCT, STATIC, 0, 0, 0 };
 
 struct	table	*cregtab;
 
-int	nreg	3;
-int	isn	10000;
+int	nreg = 3;
+int	isn = 10000;
 
 int main(int argc, char *argv[])
 {
@@ -82,7 +106,7 @@ int main(int argc, char *argv[])
  * required is not too large.
  * Return a ptr to the table entry or 0 if none found.
  */
-char *
+struct optab *
 match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
 {
 #define	NOCVL	1
@@ -116,20 +140,20 @@ match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
 		if (opdope[p2->op]&CNVRT && (nocvt&NOCVR)==0
 			 && (opdope[p2->tr1->op]&CNVRT)==0) {
 			tree->tr2 = p2->tr1;
-			if (opt = match(tree, table, nrleft, NOCVL))
+			if ((opt = match(tree, table, nrleft, NOCVL)))
 				return(opt);
 			tree->tr2 = p2;
 		} else if (opdope[p1->op]&CNVRT && (nocvt&NOCVL)==0
 		 && (opdope[p1->tr1->op]&CNVRT)==0) {
 			tree->tr1 = p1->tr1;
-			if (opt = match(tree, table, nrleft, NOCVR))
+			if ((opt = match(tree, table, nrleft, NOCVR)))
 				return(opt);
 			tree->tr1 = p1;
 		}
 		d2 = dcalc(p2, nrleft);
 	}
-	for (; table->op!=op; table++)
-		if (table->op==0)
+	for (; table->tabop!=op; table++)
+		if (table->tabop==0)
 			return(0);
 	for (opt = table->tabp; opt->tabdeg1!=0; opt++) {
 		if (d1 > (opt->tabdeg1&077)
@@ -140,7 +164,7 @@ match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
 		}
 		if ((opdope[op]&BINARY)!=0 && p2!=0) {
 			if (d2 > (opt->tabdeg2&077)
-			 || (opt->tabdeg2 >= 0100) && (p2->op != STAR) )
+			 || ((opt->tabdeg2 >= 0100) && (p2->op != STAR)) )
 				continue;
 			if (notcompat(p2,opt->tabtyp2, 0))
 				continue;
@@ -173,7 +197,7 @@ match(struct tnode *atree, struct table *table, int nrleft, int nocvt)
  */
 int rcexpr(struct tnode *atree, struct table *atable, int reg)
 {
-	register r;
+	register int r;
 	int modf, nargs, recurf;
 	register struct tnode *tree;
 	register struct table *table;
@@ -191,7 +215,7 @@ int rcexpr(struct tnode *atree, struct table *atable, int reg)
 again:
 	if((tree=atree)==0)
 		return(0);
-	if (opdope[tree->op]&RELAT && tree->tr2->op==CON && tree->tr2->value==0
+	if (opdope[tree->op]&RELAT && tree->tr2->op==CON && ((struct tconst *)tree->tr2)->value==0
 	 && table==cctab)
 		tree = atree = tree->tr1;
 	/*
@@ -269,7 +293,7 @@ again:
 		r = 0;
 		nargs = 0;
 		modf = 0;
-		if (tree->tr1->op!=NAME || tree->tr1->class!=EXTERN) {
+		if (tree->tr1->op!=NAME || ((struct tname *)tree->tr1)->class!=EXTERN) {
 			nargs++;
 			nstack++;
 		}
@@ -285,7 +309,7 @@ again:
 		}
 		tree = atree;
 		tree->op = CALL2;
-		if (modf && tree->tr1->op==NAME && tree->tr1->class==EXTERN)
+		if (modf && tree->tr1->op==NAME && ((struct tname *)tree->tr1)->class==EXTERN)
 			tree->op = CALL1;
 		if (cexpr(tree, regtab, reg)<0)
 			error("compiler botch: call");
@@ -326,7 +350,7 @@ again:
 	 */
 	if (table!=cctab && table!=cregtab && recurf<2
 	 && (opdope[tree->op]&LEAF)==0) {
-		if (r=delay(&atree, table, reg)) {
+		if ((r=delay(&atree, table, reg))) {
 			tree = atree;
 			table = efftab;
 			reg = r-1;
@@ -400,7 +424,7 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	struct tnode *p2;
 	char *string;
 	int reg, reg1, rreg, flag, opd;
-	char *opt;
+	struct optab *opt;
 
 	tree = atree;
 	reg = areg;
@@ -413,10 +437,10 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	 */
 	if ((opd&RELAT||c==LOGAND||c==LOGOR||c==EXCLA) && table!=cctab) {
 		cbranch(tree, c=isn++, 1, reg);
-		rcexpr(&czero, table, reg);
+		rcexpr((struct tnode *)&czero, table, reg);
 		branch(isn, 0);
 		label(c);
-		rcexpr(&cone, table, reg);
+		rcexpr((struct tnode *)&cone, table, reg);
 		label(isn++);
 		return(reg);
 	}
@@ -440,7 +464,7 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	/*
 	 * long values take 2 registers.
 	 */
-	if ((tree->type==LONG||opd&RELAT&&tree->tr1->type==LONG) && tree->op!=ITOL)
+	if ((tree->type==LONG||(opd&RELAT&&tree->tr1->type==LONG)) && tree->op!=ITOL)
 		reg1++;
 	/*
 	 * Leaves of the expression tree
@@ -452,8 +476,8 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 	 */
 
 	if ((tree->op==PLUS||tree->op==ASPLUS) &&
-	    (p1=tree->tr2)->op == CON && p1->value == -1) {
-		p1->value = 1;
+	    (p1=tree->tr2)->op == CON && ((struct tconst *)p1)->value == -1) {
+		((struct tconst *)p1)->value = 1;
 		tree->op =+ (MINUS-PLUS);
 	}
 	/*
@@ -488,20 +512,20 @@ int cexpr(struct tnode *atree, struct table *table, int areg)
 			return(-1);
 	string = opt->tabstring;
 	p1 = tree->tr1;
-	if (p1->op==FCON && p1->value>0) {
+	if (p1->op==FCON && ((struct ftconst *)p1)->value>0) {
 		union { double d; unsigned short s[4]; } val_union;
-		val_union.d = p1->fvalue; // p1->fvalue is a double (from struct ftconst)
-		printf(".data\nL%d:%06o;%06o;%06o;%06o\n.text\n", p1->value, val_union.s[0], val_union.s[1], val_union.s[2], val_union.s[3]);
-		p1->value = -p1->value;
+		val_union.d = ((struct ftconst *)p1)->fvalue; // p1->fvalue is a double (from struct ftconst)
+		printf(".data\nL%d:%06o;%06o;%06o;%06o\n.text\n", ((struct ftconst *)p1)->value, val_union.s[0], val_union.s[1], val_union.s[2], val_union.s[3]);
+		((struct ftconst *)p1)->value = -((struct ftconst *)p1)->value;
 	}
 	p2 = 0;
 	if (opdope[tree->op]&BINARY) {
 		p2 = tree->tr2;
-		if (p2->op==FCON && p2->value>0) {
+		if (p2->op==FCON && ((struct ftconst *)p2)->value>0) {
 			union { double d; unsigned short s[4]; } val_union;
-			val_union.d = p2->fvalue; // p2->fvalue is a double
-			printf(".data\nL%d:%06o;%06o;%06o;%06o\n.text\n", p2->value, val_union.s[0], val_union.s[1], val_union.s[2], val_union.s[3]);
-			p2->value = -p2->value;
+			val_union.d = ((struct ftconst *)p2)->fvalue; // p2->fvalue is a double
+			printf(".data\nL%d:%06o;%06o;%06o;%06o\n.text\n", ((struct ftconst *)p2)->value, val_union.s[0], val_union.s[1], val_union.s[2], val_union.s[3]);
+			((struct ftconst *)p2)->value = -((struct ftconst *)p2)->value;
 		}
 	}
 loop:
@@ -509,7 +533,7 @@ loop:
 	 * The 0200 bit asks for a tab.
 	 */
 	if ((c = *string++) & 0200) {
-		c =& 0177;
+		c &= 0177;
 		putchar('\t');
 	}
 	switch (c) {
@@ -611,7 +635,7 @@ loop:
 		c = *string++ - 'A';
 		if (*string=='!') {
 			string++;
-			c =| 020;	/* force right register */
+			c |= 020;	/* force right register */
 		}
 		if ((c&02)!=0)
 			ctable = sptab;
@@ -646,15 +670,16 @@ loop:
 				movreg(rreg, reg1, p);
 			else
 				reg1 = rreg;
-		} else if (rreg!=reg)
+		} else if (rreg!=reg) {
 			if ((c&020)==0 && oddreg(tree, 0)==0 && tree->type!=LONG
 			&& (flag&04
-			  || flag&01&&xdcalc(p2,nreg-rreg-1)<=(opt->tabdeg2&077)
-			  || flag&02&&xdcalc(p1,nreg-rreg-1)<=(opt->tabdeg1&077))) {
+			  || (flag&01&&xdcalc(p2,nreg-rreg-1)<=(opt->tabdeg2&077))
+			  || (flag&02&&xdcalc(p1,nreg-rreg-1)<=(opt->tabdeg1&077)))) {
 				reg = rreg;
 				reg1 = rreg+1;
 			} else
 				movreg(rreg, reg, p);
+		}
 		goto loop;
 
 	/* R */
@@ -674,7 +699,7 @@ loop:
 			string++;
 			r++;
 		}
-		if (r>nreg || r>=4 && tree->type==DOUBLE)
+		if (r>nreg || (r>=4 && tree->type==DOUBLE))
 			error("Register overflow: simplify expression");
 		printf("r%d", r);
 		goto loop;
@@ -710,8 +735,8 @@ loop:
 				p = p->tr1;
 			}
 			if ((p = p->tr2)->op == CON) {
-				if (p->value)
-					psoct(p->value);
+				if (((struct tconst *)p)->value)
+					psoct(((struct tconst *)p)->value);
 			} else if (p->op==AMPER)
 				pname(p->tr1, 0);
 		}
@@ -778,7 +803,7 @@ loop:
 	 * Mask used in field assignments
 	 */
 	case 'Z':
-		printf("$%o", tree->mask);
+		printf("$%o", ((struct fasgn *)tree)->mask);
 		goto loop;
 
 	/*
@@ -802,7 +827,7 @@ loop:
  */
 int reorder(struct tnode **treep, struct table *table, int reg)
 {
-	register r, o;
+	register int r, o;
 	register struct tnode *p;
 
 	p = *treep;
@@ -852,13 +877,14 @@ int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 		case ASLSH:
 		case ASRSH:
 		case ASSIGN:
-			if (p1->class != REG||p1->type==CHAR||isfloat(p->tr2))
+			if (((struct tname *)p1)->class != REG||p1->type==CHAR||isfloat(p->tr2))
 				return(0);
 			if (p->op==ASSIGN) switch (p->tr2->op) {
 			case TIMES:
 				if (!ispow2(p->tr2))
 					break;
 				p->tr2 = pow2(p->tr2);
+				/* fall through */
 			case PLUS:
 			case MINUS:
 			case AND:
@@ -869,15 +895,15 @@ int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 			case RSHIFT:
 				p1 = p->tr2->tr2;
 				if (xdcalc(p1, 16) > 12
-				 || p1->op==NAME
-				 &&(p1->nloc==p->tr1->nloc
-				  || p1->regno==p->tr1->nloc))
+				 || (p1->op==NAME
+				 && (((struct tname *)p1)->nloc==((struct tname *)p->tr1)->nloc
+				  || ((struct tname *)p1)->regno==((struct tname *)p->tr1)->nloc)))
 					return(0);
 				p1 = p->tr2;
 				p->tr2 = p1->tr1;
 				if (p1->tr1->op!=NAME
-				 || p1->tr1->class!=REG
-				 || p1->tr1->nloc!=p->tr1->nloc)
+				 || ((struct tname *)p1->tr1)->class!=REG
+				 || ((struct tname *)p1->tr1)->nloc!=((struct tname *)p->tr1)->nloc)
 					rcexpr(p, efftab, reg);
 				p->tr2 = p1->tr2;
 				p->op = p1->op + ASPLUS - PLUS;
@@ -889,6 +915,7 @@ int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 		case ASTIMES:
 			if (!ispow2(p))
 				return(0);
+			/* fall through */
 		case ASPLUS:
 		case ASMINUS:
 		case ASAND:
@@ -921,7 +948,7 @@ int sreorder(struct tnode **treep, struct table *table, int reg, int recurf)
 int delay(struct tnode **treep, struct table *table, int reg)
 {
 	register struct tnode *p, *p1;
-	register r;
+	register int r;
 
 	p = *treep;
 	if ((p->op==INCAFT||p->op==DECAFT)
@@ -950,11 +977,11 @@ struct tnode *sdelay(struct tnode **ap)
 
 	p = *ap;
 	if ((p->op==INCAFT||p->op==DECAFT) && p->tr1->op==NAME) {
-		*ap = ncopy(p->tr1);
+		*ap = (struct tnode *)ncopy((struct tname *)p->tr1);
 		return(p);
 	}
 	if (p->op==STAR || p->op==PLUS)
-		if (p1=sdelay(&p->tr1))
+		if ((p1=sdelay(&p->tr1)))
 			return(p1);
 	if (p->op==PLUS)
 		return(sdelay(&p->tr2));
@@ -1013,13 +1040,13 @@ int chkleaf(struct tnode *atree, struct table *table, int reg)
 int comarg(struct tnode *atree, int *flagp)
 {
 	register struct tnode *tree;
-	register retval;
+	register int retval;
 	int i;
 	int size;
 
 	tree = atree;
 	if (tree->op==STRASG) {
-		size = tree->mask;
+		size = ((struct fasgn *)tree)->mask;
 		tree = tree->tr1;
 		tree = strfunc(tree);
 		if (size <= 2) {
@@ -1038,7 +1065,7 @@ int comarg(struct tnode *atree, int *flagp)
 		tree = tnode(PLUS, STRUCT+PTR, tree, tconst(size, INT));
 		tree = optim(tree);
 		retval = rcexpr(tree, regtab, 0);
-		size =>> 1;
+		size >>= 1;
 		if (size <= 5) {
 			for (i=0; i<size; i++)
 				printf("mov	-(r%d),-(sp)\n", retval);
@@ -1104,18 +1131,18 @@ void doinit(int atype, struct tnode *atree)
 			if (tree->tr1->op!=FCON && tree->tr1->op!=SFCON)
 				goto illinit;
 			tree = tree->tr1;
-			tree->value = tree->fvalue;
+			((struct ftconst *)tree)->value = ((struct ftconst *)tree)->fvalue;
 			tree->op = CON;
 		} else if (tree->op==LTOI) {
 			if (tree->tr1->op!=LCON)
 				goto illinit;
 			tree = tree->tr1;
-			lval = tree->lvalue;
+			lval = ((struct lconst *)tree)->lvalue;
 			tree->op = CON;
-			tree->value = lval;
+			((struct tconst *)tree)->value = lval;
 		}
 		if (tree->op == CON)
-			printf("%o\n", tree->value);
+			printf("%o\n", ((struct tconst *)tree)->value);
 		else if (tree->op==AMPER) {
 			pname(tree->tr1, 0);
 			putchar('\n');
@@ -1127,15 +1154,15 @@ void doinit(int atype, struct tnode *atree)
 	case FLOAT:
 		if (tree->op==ITOF) {
 			if (tree->tr1->op==CON) {
-				fval = tree->tr1->value;
+				fval = ((struct tconst *)tree->tr1)->value;
 			} else
 				goto illinit;
 		} else if (tree->op==FCON || tree->op==SFCON)
-			fval = tree->fvalue;
+			fval = ((struct ftconst *)tree)->fvalue;
 		else if (tree->op==LTOF) {
 			if (tree->tr1->op!=LCON)
 				goto illinit;
-			fval = tree->tr1->lvalue;
+			fval = ((struct lconst *)tree->tr1)->lvalue;
 		} else
 			goto illinit;
 		if (type==FLOAT) {
@@ -1157,13 +1184,13 @@ void doinit(int atype, struct tnode *atree)
 				tree->op = FCON;
 			if (tree->op!= FCON)
 				goto illinit;
-			lval = tree->fvalue;
+			lval = ((struct ftconst *)tree)->fvalue;
 		} else if (tree->op==ITOL) {
 			if (tree->tr1->op != CON)
 				goto illinit;
-			lval = tree->tr1->value;
+			lval = ((struct tconst *)tree->tr1)->value;
 		} else if (tree->op==LCON)
-			lval = tree->lvalue;
+			lval = ((struct lconst *)tree)->lvalue;
 		else
 			goto illinit;
 		// Print LSW then MSW for the long value

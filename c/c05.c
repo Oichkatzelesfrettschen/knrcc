@@ -147,12 +147,12 @@ int opdope_pass0[OPDOPE_PASS0_SIZE] = {
  * For = however the left operand can't be converted
  * and the specified conversion is applied to the rhs.
  */
-char cvtab[4][4] = {
-/*		int	double		long		ptr */
-/* int */	0,	(FTI<<4)+ITF,	(LTI<<4)+ITL,	(ITP<<4)+ITP,	
-/* double */	ITF,	0,		LTF,		XX,
-/* long */	ITL,	(FTL<<4)+LTF,	0,		(LTP<<4)+LTP,
-/* ptr */	ITP,	XX,		LTP,		PTI,
+unsigned char cvtab[4][4] = {
+	/*		int	double		long		ptr */
+	/* int */	{0,	(FTI<<4)+ITF,	(LTI<<4)+ITL,	(ITP<<4)+ITP},	
+	/* double */	{ITF,	0,		LTF,		XX},
+	/* long */	{ITL,	(FTL<<4)+LTF,	0,		(LTP<<4)+LTP},
+	/* ptr */	{ITP,	XX,		LTP,		PTI},
 };
 
 /*
