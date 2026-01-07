@@ -6,6 +6,18 @@
 
 #include "c1.h"
 
+/* Make opdope refer to Pass 1's table */
+#define opdope opdope_pass1
+
+/* Define struct acl before forward declarations that use it */
+#define	LSTSIZ	20
+struct acl {
+	int nextl;
+	int nextn;
+	struct tnode *nlist[LSTSIZ];
+	struct tnode *llist[LSTSIZ+1];
+};
+
 // Static forward declarations for c12.c (add if not present or append)
 static struct tnode *optim(struct tnode *atree);
 static struct tnode *unoptim(struct tnode *atree);
@@ -16,13 +28,15 @@ static void squash(struct tnode **p, struct tnode **maxp); // K&R: squash(p, max
 static void const_func(int op, int *vp, int av);     // K&R: const(op, vp, av) int *vp; (renamed to avoid keyword conflict)
 static void insert(int op, struct tnode *atree, struct acl *alist); // K&R: insert(op, atree, alist) struct acl *alist;
 static int islong(int t);                       // K&R: islong(t)
-static struct tnode *isconstant(struct tnode *at); // K&R: isconstant(at) struct tnode *at;
+struct tnode *isconstant(struct tnode *at); // Not static - declared in c1.h
 static struct tnode *hardlongs(struct tnode *at);  // K&R: hardlongs(at) struct tnode *at;
-// getblk, tnode, tconst, lconst are already handled (getblk is global, others static & ANSI)
+struct tnode *tnode(int op, int type, ...);  // Forward declaration for tnode
+struct tnode *lconst(int op, struct tnode *lp, struct tnode *rp);  // Forward declaration
+// getblk, tconst are already handled (getblk is global, others static & ANSI)
 
 static struct tnode *optim(struct tnode *atree)
 {
-	struct { int intx[4]; } /* unnamed_struct_var_optim */; // Give it a name or handle if used
+	union { int intx[4]; double d; } fval_union; // For FCON conversion
 	register int op, dope; // Typed local register variables
 	int d1, d2;
 	struct tnode *t;
@@ -32,19 +46,22 @@ static struct tnode *optim(struct tnode *atree)
 		return(0);
 	if ((op = tree->op)==0)
 		return(tree);
-	if (op==NAME && tree->class==AUTO) {
-		tree->class = OFFS;
-		tree->regno = 5;
-		tree->offset = tree->nloc;
+	if (op==NAME && ((struct tname *)tree)->class==AUTO) {
+		((struct tname *)tree)->class = OFFS;
+		((struct tname *)tree)->regno = 5;
+		((struct tname *)tree)->offset = ((struct tname *)tree)->nloc;
 	}
 	dope = opdope[op];
 	if ((dope&LEAF) != 0) {
-		if (op==FCON
-		 && tree->fvalue.intx[1]==0
-		 && tree->fvalue.intx[2]==0
-		 && tree->fvalue.intx[3]==0) {
-			tree->op = SFCON;
-			tree->value = tree->fvalue.intx[0];
+		if (op==FCON) {
+			/* Convert FCON to SFCON if possible */
+			fval_union.d = ((struct ftconst *)tree)->fvalue;
+			if (fval_union.intx[1]==0
+			 && fval_union.intx[2]==0
+			 && fval_union.intx[3]==0) {
+				tree->op = SFCON;
+				((struct ftconst *)tree)->value = fval_union.intx[0];
+			}
 		}
 		return(tree);
 	}
@@ -80,9 +97,9 @@ static struct tnode *optim(struct tnode *atree)
 			tree->op = PLUS;
 			if (t->type==DOUBLE)
 				/* PDP-11 FP representation */
-				t->value =^ 0100000;
+				((struct ftconst *)t)->value ^= 0100000;
 			else
-				t->value = -t->value;
+				((struct tconst *)t)->value = -((struct tconst *)t)->value;
 		}
 		break;
 	}
@@ -107,7 +124,7 @@ static struct tnode *optim(struct tnode *atree)
 		 * long & pos-int is simpler
 		 */
 		if (tree->type==LONG && tree->tr2->op==ITOL
-		 && (tree->tr2->tr1->op==CON && tree->tr2->tr1->value>=0
+		 && (tree->tr2->tr1->op==CON && ((struct tconst *)tree->tr2->tr1)->value>=0
 		   || tree->tr2->tr1->type==UNSIGN)) {
 			tree->type = UNSIGN;
 			t = tree->tr2;
@@ -139,7 +156,7 @@ static struct tnode *optim(struct tnode *atree)
 	}
 	if ((dope&RELAT) != 0) {
 		if ((d1=degree(tree->tr1)) < (d2=degree(tree->tr2))
-		 || d1==d2 && tree->tr1->op==NAME && tree->tr2->op!=NAME) {
+		 || (d1==d2 && tree->tr1->op==NAME && tree->tr2->op!=NAME)) {
 			t = tree->tr1;
 			tree->tr1 = tree->tr2;
 			tree->tr2 = t;
@@ -147,7 +164,7 @@ static struct tnode *optim(struct tnode *atree)
 		}
 		if (tree->tr1->type==CHAR && tree->tr2->op==CON
 		 && (dcalc(tree->tr1, 0) <= 12 || tree->tr1->op==STAR)
-		 && tree->tr2->value <= 127 && tree->tr2->value >= 0)
+		 && ((struct tconst *)tree->tr2)->value <= 127 && ((struct tconst *)tree->tr2)->value >= 0)
 			tree->tr2->type = CHAR;
 	}
 	d1 = max(degree(tree->tr1), islong(tree->type));
@@ -604,14 +621,6 @@ static struct tnode *lvfield(struct tnode *at)
 	error("Unimplemented field operator");
 	return(t);
 }
-
-#define	LSTSIZ	20
-struct acl {
-	int nextl;
-	int nextn;
-	struct tnode *nlist[LSTSIZ];
-	struct tnode *llist[LSTSIZ+1];
-};
 
 static struct tnode *acommute(struct tnode *atree)
 {
