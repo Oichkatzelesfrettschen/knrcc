@@ -1,4 +1,0 @@
-/home/runner/work/knrcc/knrcc/_codeql_build_dir/CMakeFiles/knrcc.dir
-/home/runner/work/knrcc/knrcc/_codeql_build_dir/CMakeFiles/cvopt.dir
-/home/runner/work/knrcc/knrcc/_codeql_build_dir/CMakeFiles/edit_cache.dir
-/home/runner/work/knrcc/knrcc/_codeql_build_dir/CMakeFiles/rebuild_cache.dir
